@@ -1,0 +1,1877 @@
+<!doctype html>
+<html lang="en" class="dark-mode">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyPulse - Your Daily Rhythm for Smarter Studying</title>
+    <!-- System Fonts used as per request -->
+    <link
+      rel="manifest"
+      href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlN0dWR5UHVsc2UiLAogICJzaG9ydF9uYW1lIjogIlN0dWR5UHVsc2UiLAogICJkZXNjcmlwdGlvbiI6ICJZb3VyIERhaWx5IFJoeXRobSBmb3IgU21hcnRlciBTdHVkeWluZyIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMEEwQzEyIiwKICAidGhlbWVfY29sb3IiOiAiIzJDN0VGNyIsCiAgImljb25zIjogWwogICAgeyAic3JjIjogImh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCAic2l6ZXMiOiAiMTkyeDE5MiIsICJ0eXBlIjogImltYWdlL3BuZyIgfSwKICAgIHsgInNyYyI6ICJodHRwczOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS81MTIiLCAic2l6ZXMiOiAiNTkyeDU5MiIsICJ0eXBlIjogImltYWdlL3BuZyIgfQogIF0KfQ=="
+    />
+    <style>
+      /* CSS Variables */
+      :root {
+        /* Palette */
+        --primary: #2d7ef7;
+        --primary-dark: #1b5fd9;
+        --accent: #9b5cff;
+        --success: #00d4a0;
+        --warning: #ffb800;
+        --danger: #ff4757;
+
+        /* Dark Mode Defaults (Base) */
+        --dark-bg: #0a0c12;
+        --dark-card: #111827;
+        --dark-border: #1f2937;
+        --dark-text: #e5e7eb;
+        --dark-text-muted: #9ca3af;
+        --dark-input: #1f2937;
+
+        /* Light Mode Defaults */
+        --light-bg: #f0f4ff;
+        --light-card: #ffffff;
+        --light-border: #e2e8f0;
+        --light-text: #1f2937;
+        --light-text-muted: #6b7280;
+        --light-input: #f3f4f6;
+
+        /* Fonts - System Default */
+        --font-stack:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol";
+
+        /* Live Theme Variables (Defaulting to Dark) */
+        --bg: var(--dark-bg);
+        --card-bg: var(--dark-card);
+        --text: var(--dark-text);
+        --text-muted: var(--dark-text-muted);
+        --border: var(--dark-border);
+        --input-bg: var(--dark-input);
+      }
+
+      html.light-mode {
+        --bg: var(--light-bg);
+        --card-bg: var(--light-card);
+        --text: var(--light-text);
+        --text-muted: var(--light-text-muted);
+        --border: var(--light-border);
+        --input-bg: var(--light-input);
+      }
+
+      /* Reset & Base */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-stack);
+        background-color: var(--bg);
+        color: var(--text);
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+        overflow-x: hidden;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font-family: inherit;
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        outline: none;
+        background: none;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      ul {
+        list-style: none;
+      }
+
+      /* Utilities */
+      .hidden {
+        display: none !important;
+      }
+
+      .flex {
+        display: flex;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
+      .items-center {
+        align-items: center;
+      }
+
+      .justify-center {
+        justify-content: center;
+      }
+
+      .justify-between {
+        justify-content: space-between;
+      }
+
+      .gap-2 {
+        gap: 0.5rem;
+      }
+
+      .gap-4 {
+        gap: 1rem;
+      }
+
+      .w-full {
+        width: 100%;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .text-primary {
+        color: var(--primary);
+      }
+
+      .text-accent {
+        color: var(--accent);
+      }
+
+      .text-muted {
+        color: var(--text-muted);
+      }
+
+      .text-sm {
+        font-size: 0.875rem;
+      }
+
+      .text-lg {
+        font-size: 1.125rem;
+      }
+
+      .text-xl {
+        font-size: 1.25rem;
+      }
+
+      .font-bold {
+        font-weight: 700;
+      }
+
+      .font-medium {
+        font-weight: 500;
+      }
+
+      .mt-4 {
+        margin-top: 1rem;
+      }
+
+      .mb-4 {
+        margin-bottom: 1rem;
+      }
+
+      .mb-6 {
+        margin-bottom: 1.5rem;
+      }
+
+      .text-gradient {
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Components */
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.3s,
+          height 0.3s;
+      }
+
+      .btn:active::after {
+        width: 200px;
+        height: 200px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(45, 126, 247, 0.4);
+      }
+
+      .btn-outline {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+      }
+
+      .btn-outline:hover {
+        border-color: var(--text);
+        background: rgba(128, 128, 128, 0.1);
+      }
+
+      .btn-danger {
+        background-color: var(--danger);
+        color: white;
+      }
+
+      .btn-icon {
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        transition: background 0.2s;
+      }
+
+      .btn-icon:hover {
+        background: rgba(128, 128, 128, 0.1);
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .input-group {
+        margin-bottom: 1rem;
+        position: relative;
+      }
+
+      .input-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        background: var(--input-bg);
+        color: var(--text);
+        border-radius: 0.5rem;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        font-size: 1rem;
+      }
+
+      .form-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(45, 126, 247, 0.2);
+      }
+
+      .input-icon {
+        position: absolute;
+        right: 1rem;
+        top: 2.25rem;
+        color: var(--text-muted);
+        cursor: pointer;
+      }
+
+      /* Navbar */
+      .navbar {
+        height: 4.5rem;
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card-bg);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        backdrop-filter: blur(10px);
+        background-color: rgba(var(--card-bg), 0.9);
+      }
+
+      .logo-area {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+      }
+
+      .logo-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 10px rgba(45, 126, 247, 0.3);
+      }
+
+      .brand-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      /* App Layout */
+      .app-layout {
+        display: flex;
+        min-height: calc(100vh - 4.5rem);
+      }
+
+      .sidebar {
+        width: 260px;
+        border-right: 1px solid var(--border);
+        background-color: var(--card-bg);
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        position: fixed;
+        height: calc(100vh - 4.5rem);
+        top: 4.5rem;
+        left: 0;
+        overflow-y: auto;
+        z-index: 100;
+        transition: transform 0.3s ease;
+      }
+
+      .main-content {
+        margin-left: 260px;
+        padding: 2rem;
+        width: 100%;
+        min-height: calc(100vh - 4.5rem);
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.25rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+      }
+
+      .nav-item:hover {
+        background-color: rgba(128, 128, 128, 0.05);
+        color: var(--text);
+      }
+
+      .nav-item.active {
+        background-color: rgba(45, 126, 247, 0.1);
+        color: var(--primary);
+        font-weight: 600;
+        border-left: 3px solid var(--primary);
+      }
+
+      .nav-item i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+      }
+
+      /* Modals */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-content {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        max-width: 900px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+        position: relative;
+      }
+
+      .modal-auth {
+        display: flex;
+        flex-direction: row;
+        min-height: 500px;
+      }
+
+      .modal-left {
+        width: 40%;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        padding: 2.5rem;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .modal-left::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.4;
+      }
+
+      .modal-right {
+        width: 60%;
+        padding: 3rem;
+        overflow-y: auto;
+      }
+
+      .modal-confirm {
+        max-width: 400px;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      /* Sections */
+      .page-section {
+        animation: fadeIn 0.4s ease;
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        padding: 1.5rem;
+        border-radius: 1rem;
+        color: #1f2937;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-top: 0.5rem;
+      }
+
+      /* Toast */
+      .toast-container {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        pointer-events: none;
+      }
+
+      .toast {
+        pointer-events: auto;
+        padding: 1rem 1.5rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--primary);
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text);
+        min-width: 300px;
+      }
+
+      /* Landing Page Specifics */
+      .hero {
+        padding: 8rem 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(45, 126, 247, 0.15) 0%,
+          transparent 60%
+        );
+      }
+
+      .hero-title {
+        font-size: 3.5rem;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+
+      .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto 2.5rem;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 4rem;
+      }
+
+      /* Tasks */
+      .task-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        transition: background 0.2s;
+      }
+
+      .task-item:hover {
+        background: rgba(128, 128, 128, 0.05);
+      }
+
+      .task-check {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .task-check.checked {
+        background: var(--success);
+        border-color: var(--success);
+      }
+
+      .task-check.checked::after {
+        content: "✓";
+        color: white;
+        font-size: 0.8rem;
+      }
+
+      /* Pomodoro */
+      .timer-ring {
+        width: 300px;
+        height: 300px;
+        position: relative;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .timer-svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+      }
+
+      .timer-circle-bg {
+        fill: none;
+        stroke: var(--border);
+        stroke-width: 8;
+      }
+
+      .timer-circle-fg {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 8;
+        stroke-dasharray: 880;
+        stroke-dashoffset: 0;
+        transition: stroke-dashoffset 1s linear;
+        stroke-linecap: round;
+      }
+
+      .timer-text {
+        font-size: 4rem;
+        font-weight: 800;
+        position: absolute;
+      }
+
+      /* Chatbot */
+      .chatbot-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 10px 25px rgba(45, 126, 247, 0.5);
+        z-index: 5000;
+        transition: transform 0.2s;
+      }
+
+      .chatbot-btn:hover {
+        transform: scale(1.1) rotate(10deg);
+      }
+
+      .chat-panel {
+        position: fixed;
+        bottom: 6rem;
+        right: 2rem;
+        width: 350px;
+        height: 500px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        z-index: 4999;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .chat-header {
+        padding: 1rem;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+      }
+
+      .chat-messages {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .chat-msg {
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        max-width: 80%;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .chat-msg.bot {
+        background: var(--input-bg);
+        color: var(--text);
+        align-self: flex-start;
+        border-bottom-left-radius: 0.25rem;
+      }
+
+      .chat-msg.user {
+        background: var(--primary);
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 0.25rem;
+      }
+
+      .chat-input-area {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(20px);
+          opacity: 0;
+        }
+
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(45, 126, 247, 0.7);
+        }
+
+        70% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 10px rgba(45, 126, 247, 0);
+        }
+
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(45, 126, 247, 0);
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .sidebar {
+          transform: translateX(-100%);
+          width: 280px;
+          box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
+
+        .modal-content {
+          flex-direction: column;
+        }
+
+        .modal-left {
+          width: 100%;
+          height: 200px;
+          padding: 1.5rem;
+        }
+
+        .modal-right {
+          width: 100%;
+          padding: 1.5rem;
+        }
+
+        .modal-auth {
+          flex-direction: column;
+        }
+
+        .hero-title {
+          font-size: 2.5rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <div id="toast-container" class="toast-container"></div>
+    <div id="modal-container"></div>
+
+    <script>
+      /**
+       * StudyPulse - Single File Implementation
+       * Architecture:
+       * 1. Store: LocalStorage wrapper with reactivity
+       * 2. Utils: Helpers for DOM, Date, etc.
+       * 3. Views: Render functions for each page
+       * 4. Controllers: Logic for specific features (Auth, Tasks, Pomodoro)
+       */
+
+      // --- 1. STORE & STATE ---
+      const Store = {
+        state: {
+          theme: localStorage.getItem("theme") || "dark", // Default dark
+          currentUser: JSON.parse(localStorage.getItem("currentUser")) || null,
+          users: JSON.parse(localStorage.getItem("users")) || [],
+          tasks: JSON.parse(localStorage.getItem("tasks")) || [],
+          moodLogs: JSON.parse(localStorage.getItem("moodLogs")) || [],
+          settings: JSON.parse(localStorage.getItem("settings")) || {},
+          filteredTasks: [], // For search/filter
+          view: "dashboard", // current view
+          taskTab: "all", // NEW: current task tab
+          timerState: { timeLeft: 1500, isRunning: false, mode: "focus" }, // 25 min default
+          chatOpen: false,
+        },
+        listeners: [],
+
+        save() {
+          localStorage.setItem("theme", this.state.theme);
+          localStorage.setItem("users", JSON.stringify(this.state.users));
+          localStorage.setItem("tasks", JSON.stringify(this.state.tasks));
+          localStorage.setItem("moodLogs", JSON.stringify(this.state.moodLogs));
+          if (this.state.currentUser) {
+            // Update user inside users array
+            const idx = this.state.users.findIndex(
+              (u) => u.id === this.state.currentUser.id,
+            );
+            if (idx !== -1) this.state.users[idx] = this.state.currentUser;
+            localStorage.setItem(
+              "currentUser",
+              JSON.stringify(this.state.currentUser),
+            );
+          } else {
+            localStorage.removeItem("currentUser");
+          }
+        },
+
+        setState(newState) {
+          this.state = { ...this.state, ...newState };
+          this.save();
+          this.notify();
+        },
+
+        subscribe(fn) {
+          this.listeners.push(fn);
+        },
+        notify() {
+          this.listeners.forEach((fn) => fn(this.state));
+        },
+      };
+
+      // --- 2. UTILS ---
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+      const html = (strings, ...values) =>
+        String.raw({ raw: strings }, ...values); // simple tag for syntax highlighting if supported
+
+      const Toast = {
+        show(msg, type = "info") {
+          const toast = document.createElement("div");
+          toast.className = "toast";
+          const colors = {
+            info: "var(--primary)",
+            success: "var(--success)",
+            danger: "var(--danger)",
+            warning: "var(--warning)",
+          };
+          toast.style.borderLeftColor = colors[type];
+          toast.innerHTML = `<span style="font-size:1.2em">${type === "success" ? "✅" : type === "danger" ? "⚠️" : "ℹ️"}</span> <span>${msg}</span>`;
+          $("#toast-container").appendChild(toast);
+          setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => toast.remove(), 300);
+          }, 3000);
+        },
+      };
+
+      const Modal = {
+        show(content) {
+          const el = document.createElement("div");
+          el.className = "modal-overlay";
+          el.innerHTML = content;
+          el.onclick = (e) => {
+            if (e.target === el) this.close();
+          };
+          $("#modal-container").appendChild(el);
+        },
+        close() {
+          $("#modal-container").innerHTML = "";
+        },
+      };
+
+      // --- 3. CONTROLLERS ---
+      const Auth = {
+        login(email, password) {
+          const user = Store.state.users.find(
+            (u) => u.email === email && u.password === password,
+          );
+          if (user) {
+            Store.setState({ currentUser: user, view: "dashboard" });
+            Toast.show(`Welcome back, ${user.name}!`, "success");
+            Modal.close();
+          } else {
+            Toast.show("Invalid credentials", "danger");
+          }
+        },
+        signup(name, email, password) {
+          if (Store.state.users.some((u) => u.email === email)) {
+            Toast.show("Email already registered", "danger");
+            return;
+          }
+          const newUser = {
+            id: Date.now(),
+            name,
+            email,
+            password,
+            xp: 0,
+            level: 1,
+            joinDate: new Date().toISOString(),
+          };
+          const newUsers = [...Store.state.users, newUser];
+          Store.state.users = newUsers; // Set directly to avoid overwrite
+          Store.setState({ currentUser: newUser, view: "dashboard" });
+          Toast.show("Account created! Welcome!", "success");
+          Modal.close();
+        },
+        logout() {
+          Store.setState({ currentUser: null, view: "landing" });
+          Toast.show("Logged out successfully", "info");
+          Modal.close();
+        },
+      };
+
+      const Gamification = {
+        addXP(amount) {
+          if (!Store.state.currentUser) return;
+          const user = Store.state.currentUser;
+          user.xp += amount;
+
+          // Level Thresholds
+          // L1: 0-199, L2: 200, L3: 500, L4: 1000, L5: 2000
+          let newLevel = 1;
+          if (user.xp >= 2000) newLevel = 5;
+          else if (user.xp >= 1000) newLevel = 4;
+          else if (user.xp >= 500) newLevel = 3;
+          else if (user.xp >= 200) newLevel = 2;
+
+          if (newLevel > user.level) {
+            user.level = newLevel;
+            // Celebration Modal
+            Modal.show(`
+                        <div class="modal-confirm bg-card rounded p-12 text-center" style="max-width:500px">
+                            <div style="font-size:5rem; margin-bottom:1rem; animation: pulse 1s infinite;">🎉</div>
+                            <h2 class="text-2xl font-bold mb-2 text-primary">Level Up!</h2>
+                            <p class="text-xl mb-6">You reached <span class="text-accent font-bold">Level ${newLevel}</span></p>
+                            <div style="background:var(--bg); padding:1rem; border-radius:0.5rem; margin-bottom:2rem;">
+                                <p class="text-muted text-sm">Next Level at ${newLevel === 2 ? 500 : newLevel === 3 ? 1000 : newLevel === 4 ? 2000 : "MAX"} XP</p>
+                            </div>
+                            <button onclick="Modal.close()" class="btn btn-primary w-full">Awesome!</button>
+                        </div>
+                    `);
+            Store.state.confetti = true;
+            // setTimeout(() => Store.setState({confetti:false}), 5000);
+          } else {
+            Toast.show(`+${amount} XP`, "success");
+          }
+          Store.save();
+          Store.notify(); // Update UI
+        },
+      };
+
+      const Pomodoro = {
+        interval: null,
+        start() {
+          if (Store.state.timerState.isRunning) return;
+          Store.state.timerState.isRunning = true;
+          Store.notify();
+          this.interval = setInterval(() => {
+            Store.state.timerState.timeLeft--;
+            if (Store.state.timerState.timeLeft <= 0) {
+              this.complete();
+            }
+            Store.notify();
+          }, 1000);
+        },
+        pause() {
+          clearInterval(this.interval);
+          Store.state.timerState.isRunning = false;
+          Store.notify();
+        },
+        reset() {
+          this.pause();
+          Store.state.timerState.timeLeft = 1500;
+          Store.notify();
+        },
+        complete() {
+          this.pause();
+          Gamification.addXP(50);
+          Toast.show("Focus Session Complete!", "success");
+          // Play sound
+          Store.state.timerState.timeLeft = 1500; // Reset
+          Store.notify();
+        },
+      };
+
+      // --- 4. VIEWS (RENDERERS) ---
+
+      // Helper to get Icon SVG
+      const icon = (name) => {
+        const icons = {
+          dashboard:
+            '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>',
+          check:
+            '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>',
+          calendar:
+            '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>',
+          timer:
+            '<path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.48-9 10s4.03 10 9 10 9-4.48 9-10c0-2.12-.74-4.07-1.97-5.61zM12 22c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>',
+          tasks:
+            '<path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>',
+          mic: '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 3.01-2.55 5.5-6 5.5s-6-2.49-6-5.5H3c0 3.75 3.32 6.8 7.5 7.36V22h3v-3.64c4.18-.56 7.5-3.61 7.5-7.36h-2z"/>',
+        };
+        return `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">${icons[name] || ""}</svg>`;
+      };
+
+      const renderNavbar = (currentUser, theme) => {
+        const themeIcon = theme === "dark" ? "☀️" : "🌙";
+        let rightSection;
+
+        if (currentUser) {
+          rightSection = `
+                    <div class="flex items-center gap-4">
+                        <button onclick="window.toggleTheme()" class="btn-icon" title="Toggle Theme">${themeIcon}</button>
+                        <button onclick="window.toggleMic()" class="btn-icon text-primary ${Store.state.isMicListening ? "pulse" : ""}" title="Voice Command">
+                            ${icon("mic")}
+                        </button>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium hidden sm:inline text-secondary">Level ${currentUser.level}</span>
+                            <div class="logo-circle" style="width:32px;height:32px;font-size:1rem;">${currentUser.name.charAt(0)}</div>
+                        </div>
+                    </div>
+                `;
+        } else {
+          rightSection = `
+                    <div class="flex items-center gap-4">
+                        <button onclick="window.toggleTheme()" class="btn-icon" title="Toggle Theme">${themeIcon}</button>
+                        <button onclick="window.showAuth('signin')" class="btn btn-outline">Sign In</button>
+                        <button onclick="window.showAuth('signup')" class="btn btn-primary">Get Started</button>
+                    </div>
+                `;
+        }
+
+        return `
+                <nav class="navbar">
+                    <div class="logo-area" onclick="Store.setState({view: '${currentUser ? "dashboard" : "landing"}' })">
+                        <div class="logo-circle">SP</div>
+                        <span class="brand-name text-gradient">StudyPulse</span>
+                    </div>
+                    ${rightSection}
+                </nav>
+            `;
+      };
+
+      const renderLanding = () => `
+            <div class="page-section">
+                <!-- Hero section -->
+                <div class="hero">
+                    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 2rem;">
+                         <div class="logo-circle" style="width:80px;height:80px;font-size:2rem;margin:0 auto 2rem;">SP</div>
+                        <h1 class="hero-title">Your Daily Rhythm for <br/><span class="text-gradient">Smarter Studying.</span></h1>
+                        <p class="hero-subtitle">The all-in-one productivity suite for students. Pomodoro timers, collaborative study rooms, and personalized analytics.</p>
+                        <div class="flex justify-center gap-4">
+                            <button onclick="window.showAuth('signup')" class="btn btn-primary text-lg" style="padding: 1rem 2.5rem;">Get Started Free</button>
+                            <button onclick="window.showAuth('signin')" class="btn btn-outline text-lg" style="padding: 1rem 2.5rem;">Sign In</button>
+                        </div>
+                        
+                        <!-- 3D Mockup Preview -->
+                        <div style="margin-top:5rem; perspective:1000px;">
+                             <div style="width:80%; max-width:900px; margin:0 auto; background:var(--card-bg); border:1px solid var(--border); border-radius:1rem; height:450px; transform: rotateX(10deg); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3); display:flex; flex-direction:column; overflow:hidden; opacity:0.9;">
+                                <div style="padding:1rem; border-bottom:1px solid var(--border); display:flex; gap:0.5rem;">
+                                    <div style="width:12px; height:12px; border-radius:50%; background:#FF5F56;"></div>
+                                    <div style="width:12px; height:12px; border-radius:50%; background:#FFBD2E;"></div>
+                                    <div style="width:12px; height:12px; border-radius:50%; background:#27C93F;"></div>
+                                </div>
+                                <div style="flex:1; padding:2rem; display:grid; grid-template-columns: 200px 1fr; gap:2rem;">
+                                    <div style="display:flex; flex-direction:column; gap:1rem;">
+                                        <div style="height:40px; background:var(--input-bg); border-radius:0.5rem;"></div>
+                                        <div style="height:20px; background:var(--input-bg); border-radius:0.5rem; width:80%;"></div>
+                                        <div style="height:20px; background:var(--input-bg); border-radius:0.5rem; width:60%;"></div>
+                                    </div>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                                        <div style="height:120px; background:var(--input-bg); border-radius:1rem;"></div>
+                                        <div style="height:120px; background:var(--input-bg); border-radius:1rem;"></div>
+                                        <div style="height:120px; background:var(--input-bg); border-radius:1rem; grid-column:span 2;"></div>
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Features Bento Grid -->
+                <div class="container" style="max-width:1200px; margin:0 auto; padding: 6rem 2rem;">
+                    <h2 class="text-center text-xl font-bold mb-12">Everything You Need to Stay Organized</h2>
+                    <div class="feature-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <div class="card">
+                            <div class="text-primary text-2xl mb-4">🧠</div>
+                            <h3 class="font-bold text-lg mb-2">AI Analysis</h3>
+                            <p class="text-muted">Learns your habits and optimizes your schedule.</p>
+                        </div>
+                        <div class="card" style="grid-row: span 2;">
+                            <div class="text-accent text-2xl mb-4">🎮</div>
+                            <h3 class="font-bold text-lg mb-2">Gamification</h3>
+                            <p class="text-muted">Earn XP, level up, and unlock achievements. Make studying addictive (in a good way).</p>
+                             <div style="margin-top:2rem; background:var(--bg); padding:1rem; border-radius:0.5rem;">
+                                <div class="flex justify-between text-sm mb-2"><span>Level 4</span> <span>1250 XP</span></div>
+                                <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;"><div style="width:60%; height:100%; background:var(--accent);"></div></div>
+                             </div>
+                        </div>
+                        <div class="card">
+                            <div class="text-success text-2xl mb-4">🔄</div>
+                            <h3 class="font-bold text-lg mb-2">Smart Revision</h3>
+                            <p class="text-muted">Spaced repetition algorithms ensure you never forget a topic.</p>
+                        </div>
+                        <div class="card">
+                            <div class="text-warning text-2xl mb-4">👥</div>
+                            <h3 class="font-bold text-lg mb-2">Study Rooms</h3>
+                            <p class="text-muted">Real-time collaboration with shared timers and chat.</p>
+                        </div>
+                        <div class="card">
+                            <div class="text-danger text-2xl mb-4">💚</div>
+                            <h3 class="font-bold text-lg mb-2">Mental Health</h3>
+                            <p class="text-muted">Mood tracking and wellness nudges to prevent burnout.</p>
+                        </div>
+                         <div class="card">
+                            <div class="text-primary text-2xl mb-4">🎙️</div>
+                            <h3 class="font-bold text-lg mb-2">Voice Commands</h3>
+                            <p class="text-muted">"Hey StudyPulse, add a task." Hands-free control.</p>
+                        </div>
+                        <div class="card">
+                            <div class="text-muted text-2xl mb-4">📶</div>
+                            <h3 class="font-bold text-lg mb-2">Offline-First</h3>
+                            <p class="text-muted">Works everywhere, even without internet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Problem vs Solution -->
+                <div style="background:var(--card-bg); padding: 6rem 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+                     <div class="container" style="max-width:1000px; margin:0 auto; padding:0 2rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:4rem;">
+                        <div>
+                            <h3 class="text-danger font-bold text-xl mb-6">The Struggle</h3>
+                             <ul style="opacity:0.8; line-height:2.5; list-style:none;">
+                                <li>😫 My schedule is all over the place</li>
+                                <li>📅 I forget deadlines constantly</li>
+                                <li>🔀 I'm using five different apps</li>
+                                <li>😰 Studying feels overwhelming</li>
+                             </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-success font-bold text-xl mb-6">StudyPulse Fixes It</h3>
+                            <ul style="line-height:2.5; list-style:none;">
+                                <li>✅ Smart calendar for rotating schedules</li>
+                                <li>✅ Smart reminders for tasks & exams</li>
+                                <li>✅ Everything in one dashboard</li>
+                                <li>✅ Focus tools like Pomodoro timers</li>
+                            </ul>
+                        </div>
+                     </div>
+                </div>
+
+                <!-- Pricing -->
+                <div class="container" style="max-width:1200px; margin:0 auto; padding: 6rem 2rem;">
+                     <h2 class="text-center text-xl font-bold mb-4">Simple Pricing</h2>
+                     <p class="text-center text-muted mb-12">Invest in your grades for less than a coffee.</p>
+                     
+                     <div class="flex gap-6 justify-center" style="flex-wrap:wrap;">
+                        <!-- Free -->
+                        <div class="card" style="width:300px; display:flex; flex-direction:column;">
+                            <h3 class="font-bold text-lg">Free</h3>
+                            <div class="text-3xl font-bold my-4">$0</div>
+                            <ul class="text-muted text-sm mb-8" style="line-height:2; flex:1;">
+                                <li>5 Tasks</li>
+                                <li>1 Study Room</li>
+                                <li>Calendar Sync</li>
+                                <li>Basic Stats</li>
+                            </ul>
+                            <button class="btn btn-outline w-full" onclick="window.showAuth('signup')">Start Free</button>
+                        </div>
+                        <!-- Pro -->
+                        <div class="card" style="width:300px; border:2px solid var(--primary); box-shadow:0 0 30px rgba(45,126,247,0.15); display:flex; flex-direction:column; transform:scale(1.05);">
+                            <div class="text-primary text-xs font-bold mb-2 uppercase tracking-wider">Most Popular</div>
+                            <h3 class="font-bold text-lg">Pro</h3>
+                            <div class="text-3xl font-bold my-4">$4.99<span class="text-sm font-normal text-muted">/mo</span></div>
+                            <ul class="text-sm mb-8" style="line-height:2; flex:1;">
+                                <li><b>Unlimited</b> Tasks</li>
+                                <li>AI Features & Insights</li>
+                                <li>Voice Commands</li>
+                                <li>Unlimted Study Rooms</li>
+                                <li>Gamification Bonuses</li>
+                            </ul>
+                            <button class="btn btn-primary w-full" onclick="window.showAuth('signup')">Get Pro</button>
+                        </div>
+                        <!-- Team -->
+                         <div class="card" style="width:300px; display:flex; flex-direction:column;">
+                            <h3 class="font-bold text-lg">Team</h3>
+                            <div class="text-3xl font-bold my-4">$9.99<span class="text-sm font-normal text-muted">/mo</span></div>
+                            <ul class="text-muted text-sm mb-8" style="line-height:2; flex:1;">
+                                <li>Everything in Pro</li>
+                                <li>Shared Dashboards</li>
+                                <li>Group Admin Controls</li>
+                                <li>Priority Support</li>
+                            </ul>
+                            <button class="btn btn-outline w-full" onclick="window.showAuth('signup')">Get Team</button>
+                        </div>
+                     </div>
+                </div>
+
+                <!-- Footer -->
+                <footer style="border-top:1px solid var(--border); background:var(--card-bg); padding: 4rem 0; text-align:center; color:var(--text-muted);">
+                    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 2rem;">
+                        <a href="#" class="logo-circle" style="width:50px;height:50px;margin:0 auto 1.5rem; display:flex; text-decoration:none;">SP</a>
+                        <p class="mb-6 font-medium text-lg text-primary">Your Daily Rhythm for Smarter Studying.</p>
+                        <div class="flex justify-center gap-8 mb-8 text-sm flex-wrap">
+                            <a class="hover:text-primary">Features</a>
+                            <a class="hover:text-primary">Pricing</a>
+                            <a class="hover:text-primary">Blog</a>
+                            <a class="hover:text-primary">Support</a>
+                            <a class="hover:text-primary">Privacy</a>
+                            <a class="hover:text-primary">Terms</a>
+                        </div>
+                        <p class="text-sm opacity-60">&copy; 2026 StudyPulse. Built for students, by students.</p>
+                    </div>
+                </footer>
+            </div>
+        `;
+
+      const renderDashboard = (currentUser, tasks) => {
+        const pendingTasks = tasks.filter((t) => !t.completed).length;
+        const completedTasks = tasks.filter((t) => t.completed).length;
+
+        return `
+            <div class="page-section">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="logo-circle" style="width:50px;height:50px;font-size:1.5rem;box-shadow:0 10px 20px rgba(0,0,0,0.1);">${currentUser.name.charAt(0)}</div>
+                        <div>
+                            <h2 class="text-2xl font-bold">Good Morning, ${currentUser.name.split(" ")[0]}!</h2>
+                            <p class="text-muted">Ready to conquer the day? 🚀</p>
+                        </div>
+                    </div>
+                    <div class="text-right hidden sm:block">
+                        <div class="text-2xl font-bold">${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                        <div class="text-sm text-muted">${new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid (Pastel) -->
+                <div class="stats-grid mb-8">
+                    <div class="stat-card" style="background:var(--card-bg); border-left:4px solid #FFAB91;">
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <h4 class="text-muted text-xs uppercase font-bold text-accent">Pending</h4>
+                                <div class="stat-value text-accent">${pendingTasks}</div>
+                             </div>
+                             <div style="background:#FFAB91; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8rem;">📝</div>
+                        </div>
+                    </div>
+                     <div class="stat-card" style="background:var(--card-bg); border-left:4px solid #81C784;">
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <h4 class="text-muted text-xs uppercase font-bold text-success">Finished</h4>
+                                <div class="stat-value text-success">${completedTasks}</div>
+                             </div>
+                             <div style="background:#81C784; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8rem;">✅</div>
+                        </div>
+                    </div>
+                     <div class="stat-card" style="background:var(--card-bg); border-left:4px solid #9575CD;">
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <h4 class="text-muted text-xs uppercase font-bold text-primary">Focus</h4>
+                                <div class="stat-value text-primary">125<span class="text-sm text-muted font-normal ml-1">min</span></div>
+                             </div>
+                             <div style="background:#9575CD; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8rem;">⏱️</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="background:var(--card-bg); border-left:4px solid #4FC3F7;">
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <h4 class="text-muted text-xs uppercase font-bold" style="color:#29B6F6">Streak</h4>
+                                <div class="stat-value" style="color:#29B6F6">4 <span class="text-sm text-muted font-normal ml-1">days</span></div>
+                             </div>
+                             <div style="background:#4FC3F7; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8rem;">🔥</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Main Content Column -->
+                    <div style="flex:2; display:flex; flex-direction:column; gap:1.5rem;">
+                        <!-- AI Insights -->
+                        <div class="card bg-card" style="position:relative; overflow:hidden;">
+                            <div style="position:absolute; top:0; right:0; width:100px; height:100px; background:linear-gradient(135deg, transparent, var(--primary)); opacity:0.1; border-radius:0 0 0 100%;"></div>
+                            <div class="flex gap-3 items-start">
+                                <div style="background:var(--primary); color:white; padding:0.5rem; border-radius:0.5rem;">🤖</div>
+                                <div>
+                                    <h3 class="font-bold mb-1">AI Insight</h3>
+                                    <p class="text-sm text-muted">You're most productive between 10 AM and 2 PM. Try scheduling your hardest tasks then!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                         <!-- Recent Tasks -->
+                        <div class="card">
+                             <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold">Recent Tasks</h3>
+                                <button onclick="Store.setState({view:'tasks'})" class="text-primary text-sm hover:underline">View All</button>
+                            </div>
+                            <div class="task-list">
+                                ${tasks.length === 0 ? '<p class="text-muted text-center py-4">No tasks yet. Time to plan! 📝</p>' : ""}
+                                ${tasks
+                                  .slice(0, 3)
+                                  .map(
+                                    (t) => `
+                                    <div class="task-item">
+                                        <div class="flex items-center gap-3">
+                                            <div class="task-check ${t.completed ? "checked" : ""}" onclick="window.toggleTask(${t.id})"></div>
+                                            <span style="${t.completed ? "text-decoration:line-through;opacity:0.5" : ""}">${t.title}</span>
+                                        </div>
+                                    </div>
+                                `,
+                                  )
+                                  .join("")}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Column -->
+                    <div style="flex:1; display:flex; flex-direction:column; gap:1.5rem;">
+                         <!-- Quick Actions -->
+                        <div class="card">
+                            <h3 class="font-bold mb-4 text-sm uppercase text-muted">Quick Actions</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="window.addTask()" class="btn btn-outline text-xs flex flex-col items-center gap-2 py-3">
+                                    <span style="font-size:1.2rem;">➕</span> Add Task
+                                </button>
+                                <button onclick="Store.setState({view:'focus'}); Pomodoro.start()" class="btn btn-outline text-xs flex flex-col items-center gap-2 py-3">
+                                    <span style="font-size:1.2rem;">⏱️</span> Focus
+                                </button>
+                                <button class="btn btn-outline text-xs flex flex-col items-center gap-2 py-3">
+                                    <span style="font-size:1.2rem;">📅</span> Event
+                                </button>
+                                <button class="btn btn-outline text-xs flex flex-col items-center gap-2 py-3">
+                                    <span style="font-size:1.2rem;">📝</span> Note
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+      };
+
+      const renderFocus = (timerState) => {
+        const mins = Math.floor(timerState.timeLeft / 60)
+          .toString()
+          .padStart(2, "0");
+        const secs = (timerState.timeLeft % 60).toString().padStart(2, "0");
+        const percent = ((1500 - timerState.timeLeft) / 1500) * 880;
+
+        return `
+                <div class="page-section" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+                    <h2 class="text-xl font-bold mb-6">Focus Timer</h2>
+                    <div class="timer-ring">
+                        <svg class="timer-svg">
+                            <circle cx="150" cy="150" r="140" class="timer-circle-bg"/>
+                            <circle cx="150" cy="150" r="140" class="timer-circle-fg" style="stroke-dashoffset: ${percent}px"/>
+                        </svg>
+                        <div class="timer-text">${mins}:${secs}</div>
+                    </div>
+                    <div class="flex gap-4 mt-8">
+                        ${
+                          !timerState.isRunning
+                            ? `<button onclick="Pomodoro.start()" class="btn btn-primary" style="width:120px;">Play</button>`
+                            : `<button onclick="Pomodoro.pause()" class="btn btn-outline" style="width:120px;">Pause</button>`
+                        }
+                        <button onclick="Pomodoro.reset()" class="btn btn-outline">Reset</button>
+                    </div>
+                    <div class="mt-8 text-muted">
+                        Session: 25 Minutes • Reward: 50 XP
+                    </div>
+                </div>
+            `;
+      };
+
+      const renderCalendar = () => `
+            <div class="page-section">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Calendar</h2>
+                    <div class="flex gap-2">
+                        <button class="btn btn-outline text-sm">Day</button>
+                        <button class="btn btn-outline text-sm">Week</button>
+                        <button class="btn btn-primary text-sm">Month</button>
+                    </div>
+                </div>
+                <!-- Mock Calendar Grid -->
+                <div class="card p-0 overflow-hidden">
+                    <div class="grid grid-cols-7 text-center border-bottom text-sm font-bold bg-muted p-2" style="border-bottom:1px solid var(--border)">
+                         <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                    </div>
+                    <div class="grid grid-cols-7" style="min-height:400px;">
+                        ${Array(35)
+                          .fill(0)
+                          .map(
+                            (_, i) => `
+                            <div style="border:1px solid var(--border); border-top:none; border-left:none; padding:0.5rem; min-height:80px; position:relative;">
+                                <span class="text-sm text-muted">${i + 1 <= 31 ? i + 1 : ""}</span>
+                                ${i === 4 ? '<div style="background:rgba(45,126,247,0.2); color:var(--primary); font-size:0.7rem; padding:2px 4px; border-radius:4px; margin-top:4px;">Math Class</div>' : ""}
+                                ${i === 12 ? '<div style="background:rgba(255,71,87,0.2); color:var(--danger); font-size:0.7rem; padding:2px 4px; border-radius:4px; margin-top:4px;">Exam</div>' : ""}
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                </div>
+            </div>
+        `;
+
+      const renderClasses = () => `
+            <div class="page-section">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Classes</h2>
+                    <button class="btn btn-primary">+ Add Class</button>
+                </div>
+                <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+                    <div class="card" style="border-left: 5px solid var(--primary);">
+                        <h3 class="font-bold">Computer Science</h3>
+                        <p class="text-muted text-sm mb-4">Room 304 • Prof. Smith</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xs bg-input rounded px-2 py-1">Mon, Wed 10:00 AM</span>
+                        </div>
+                    </div>
+                    <div class="card" style="border-left: 5px solid var(--danger);">
+                        <h3 class="font-bold">Calculus II</h3>
+                        <p class="text-muted text-sm mb-4">Room 102 • Dr. Johnson</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xs bg-input rounded px-2 py-1">Tue, Thu 2:00 PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+      const renderExams = () => `
+            <div class="page-section">
+                 <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Exams</h2>
+                    <button class="btn btn-primary">+ Add Exam</button>
+                </div>
+                <div class="card">
+                    <div class="task-item">
+                        <div class="flex items-center gap-3">
+                            <div class="text-2xl">📅</div>
+                            <div>
+                                <h4 class="font-bold">Midterm: Calculus</h4>
+                                <p class="text-sm text-danger">Due in 3 days</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline text-sm">Edit</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+      const renderTasks = (tasks) => {
+        const tab = Store.state.taskTab || "all";
+        const filtered =
+          tab === "all" ? tasks : tasks.filter((t) => t.tag === tab);
+
+        return `
+                <div class="page-section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">My Tasks</h2>
+                        <button onclick="window.addTask()" class="btn btn-primary">+ New Task</button>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex gap-4 mb-6 border-b border-border pb-2 overflow-x-auto">
+                        <button onclick="Store.setState({taskTab:'all'})" class="pb-2 ${tab === "all" ? "text-primary font-bold border-b-2 border-primary" : "text-muted hover:text-primary"}">All Tasks</button>
+                        <button onclick="Store.setState({taskTab:'school'})" class="pb-2 ${tab === "school" ? "text-primary font-bold border-b-2 border-primary" : "text-muted hover:text-primary"}">School</button>
+                        <button onclick="Store.setState({taskTab:'personal'})" class="pb-2 ${tab === "personal" ? "text-primary font-bold border-b-2 border-primary" : "text-muted hover:text-primary"}">Personal</button>
+                        <button onclick="Store.setState({taskTab:'work'})" class="pb-2 ${tab === "work" ? "text-primary font-bold border-b-2 border-primary" : "text-muted hover:text-primary"}">Work</button>
+                    </div>
+
+                    <div class="card">
+                         ${
+                           filtered.length === 0
+                             ? `
+                            <div class="text-center py-12">
+                                <div style="font-size:3rem; margin-bottom:1rem; opacity:0.5;">📝</div>
+                                <h3 class="font-bold text-lg mb-2">No tasks found</h3>
+                                <p class="text-muted">You're all caught up in "${tab}"! Enjoy.</p>
+                            </div>
+                         `
+                             : `
+                             <div class="task-list">
+                                ${filtered
+                                  .map(
+                                    (t) => `
+                                    <div class="task-item">
+                                        <div class="flex items-center gap-3">
+                                            <div class="task-check ${t.completed ? "checked" : ""}" onclick="window.toggleTask(${t.id})"></div>
+                                            <div class="flex-1">
+                                                 <span style="${t.completed ? "text-decoration:line-through;opacity:0.5" : ""} display:block;">${t.title}</span>
+                                                 ${t.tag ? `<span class="text-xs bg-input px-2 py-0.5 rounded text-muted mt-1 inline-block uppercase" style="font-size:0.6rem;">${t.tag}</span>` : ""}
+                                            </div>
+                                        </div>
+                                        <button onclick="window.deleteTask(${t.id})" class="text-muted text-sm hover:text-danger">✖</button>
+                                    </div>
+                                `,
+                                  )
+                                  .join("")}
+                            </div>
+                         `
+                         }
+                    </div>
+                </div>
+             `;
+      };
+
+      const renderMentalHealth = () => `
+            <div class="page-section">
+                <h2 class="text-xl font-bold mb-6">Mental Wellness</h2>
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div class="card">
+                        <h3 class="font-bold mb-4">How are you feeling?</h3>
+                        <div class="flex justify-between text-4xl py-4">
+                            <button onclick="window.logMood('great')" class="btn-icon hover:scale-110 transition-transform">😄</button>
+                            <button onclick="window.logMood('good')" class="btn-icon hover:scale-110 transition-transform">🙂</button>
+                            <button onclick="window.logMood('meh')" class="btn-icon hover:scale-110 transition-transform">😐</button>
+                            <button onclick="window.logMood('bad')" class="btn-icon hover:scale-110 transition-transform">😫</button>
+                        </div>
+                        <p class="text-center text-sm text-muted mt-2">Log your mood to track trends.</p>
+                    </div>
+                    <div class="card bg-primary text-white">
+                        <h3 class="font-bold mb-2">Daily Affirmation</h3>
+                        <p class="text-lg italic opacity-90">"You are capable of amazing things. Take it one step at a time."</p>
+                    </div>
+                </div>
+                 <h3 class="font-bold mt-8 mb-4">Recent Logs</h3>
+                 <div class="card">
+                    ${
+                      Store.state.moodLogs && Store.state.moodLogs.length
+                        ? Store.state.moodLogs
+                            .slice(0, 5)
+                            .map(
+                              (m) => `
+                        <div class="flex justify-between items-center border-b border-border py-2 last:border-0">
+                            <span>${m.mood === "great" ? "😄 Great" : m.mood === "good" ? "🙂 Good" : m.mood === "meh" ? "😐 Meh" : "😫 Bad"}</span>
+                            <span class="text-sm text-muted">${new Date(m.date).toLocaleDateString()}</span>
+                        </div>
+                    `,
+                            )
+                            .join("")
+                        : '<p class="text-muted text-center">No logs yet.</p>'
+                    }
+                 </div>
+            </div>
+        `;
+
+      const renderAuthModal = (mode) => {
+        const isSignup = mode === "signup";
+        return `
+                <div class="modal-content modal-auth">
+                    <div class="modal-left">
+                        <h2 class="text-xl font-bold mb-4">${isSignup ? "Join StudyPulse" : "Welcome Back"}</h2>
+                        <p style="opacity:0.9; line-height:1.6;">Anything to stay on track. Manage your classes, tasks, exams and more. All in one place.</p>
+                    </div>
+                    <div class="modal-right">
+                        <h2 class="text-xl font-bold mb-6">${isSignup ? "Create Account" : "Sign In"}</h2>
+                        <form onsubmit="event.preventDefault(); window.handleAuthSubmit('${mode}', this)">
+                            ${
+                              isSignup
+                                ? `
+                            <div class="input-group">
+                                <label class="input-label">Full Name</label>
+                                <input name="name" class="form-input" required placeholder="John Doe">
+                            </div>`
+                                : ""
+                            }
+                            <div class="input-group">
+                                <label class="input-label">Email</label>
+                                <input type="email" name="email" class="form-input" required placeholder="student@example.com">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Password</label>
+                                <input type="password" name="password" class="form-input" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full mt-4">${isSignup ? "Create Account" : "Sign In"}</button>
+                        </form>
+                        <p class="text-center mt-4 text-sm text-muted">
+                            ${isSignup ? "Already have an account?" : "Don't have an account?"} 
+                            <a onclick="window.showAuth('${isSignup ? "signin" : "signup"}')" class="text-primary font-bold cursor-pointer">
+                                ${isSignup ? "Sign In" : "Sign Up"}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            `;
+      };
+
+      // --- 5. APP INIT & RENDER ---
+      const render = (state) => {
+        const app = $("#app");
+        document.documentElement.className =
+          state.theme === "dark" ? "" : "light-mode";
+
+        // Layout Wrapper
+        const layout = `
+                ${renderNavbar(state.currentUser, state.theme)}
+                ${
+                  state.currentUser
+                    ? `
+                    <div class="app-layout">
+                        <aside class="sidebar">
+                            <div class="nav-item ${state.view === "dashboard" ? "active" : ""}" onclick="Store.setState({view:'dashboard'})">
+                                ${icon("dashboard")} <span>Dashboard</span>
+                            </div>
+                            <div class="nav-item ${state.view === "calendar" ? "active" : ""}" onclick="Store.setState({view:'calendar'})">
+                                ${icon("calendar")} <span>Calendar</span>
+                            </div>
+                            <div class="nav-item ${state.view === "tasks" ? "active" : ""}" onclick="Store.setState({view:'tasks'})">
+                                ${icon("tasks")} <span>Activities</span>
+                            </div>
+                            <div class="nav-item pl-8 text-sm" onclick="Store.setState({view:'tasks'})">
+                                <span>• Tasks</span>
+                            </div>
+                             <div class="nav-item pl-8 text-sm" onclick="Store.setState({view:'classes'})">
+                                <span>• Classes</span>
+                            </div>
+                            <div class="nav-item pl-8 text-sm" onclick="Store.setState({view:'exams'})">
+                                <span>• Exams</span>
+                            </div>
+                            <div class="nav-item ${state.view === "focus" ? "active" : ""}" onclick="Store.setState({view:'focus'})">
+                                ${icon("timer")} <span>Focus Timer</span>
+                            </div>
+                            
+                            <!-- Premium CTA -->
+                            <div style="margin: 1rem 0.5rem; padding: 1rem; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 0.5rem; color: white; text-align: center;">
+                                <h4 class="font-bold text-sm mb-2">Try Premium Free</h4>
+                                <p class="text-xs opacity-80 mb-3">Unlock unlimited tasks & AI</p>
+                                <button class="btn btn-outline text-xs w-full" style="border-color:white; color:white;">Upgrade</button>
+                            </div>
+
+                            <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border)">
+                                <div class="nav-item" onclick="window.confirmLogout()">
+                                    <i>🚪</i> <span>Logout</span>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="main-content">
+                            ${state.view === "dashboard" ? renderDashboard(state.currentUser, state.tasks) : ""}
+                            ${state.view === "focus" ? renderFocus(state.timerState) : ""}
+                            ${state.view === "calendar" ? renderCalendar() : ""}
+                            ${state.view === "classes" ? renderClasses() : ""}
+                            ${state.view === "exams" ? renderExams() : ""}
+                            ${state.view === "tasks" ? renderTasks(state.tasks) : ""}
+                            ${state.view === "wellness" ? renderMentalHealth() : ""}
+                        </main>
+                        <!-- Kai Chatbot -->
+                        <div class="chatbot-btn" onclick="Store.setState({chatOpen: !Store.state.chatOpen})">🤖</div>
+                        ${
+                          state.chatOpen
+                            ? `
+                            <div class="chat-panel">
+                                <div class="chat-header">
+                                    <span>Kai | AI Assistant</span>
+                                    <span style="cursor:pointer" onclick="Store.setState({chatOpen:false})">✖</span>
+                                </div>
+                                <div class="chat-messages">
+                                    <div class="chat-msg bot">Hi ${state.currentUser.name.split(" ")[0]}! I'm Kai. How can I help you study today?</div>
+                                </div>
+                                <div class="chat-input-area">
+                                    <input type="text" class="form-input" placeholder="Ask a question..." style="padding:0.5rem;">
+                                    <button class="btn btn-primary btn-icon">➤</button>
+                                </div>
+                            </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                `
+                    : renderLanding()
+                }
+            `;
+
+        app.innerHTML = layout;
+      };
+
+      // --- 6. EXPOSED FUNCTIONS (GLOBAL) ---
+      window.toggleTheme = () =>
+        Store.setState({
+          theme: Store.state.theme === "dark" ? "light" : "dark",
+        });
+
+      window.showAuth = (mode) => Modal.show(renderAuthModal(mode));
+
+      window.handleAuthSubmit = (mode, form) => {
+        const formData = new FormData(form);
+        if (mode === "signup")
+          Auth.signup(
+            formData.get("name"),
+            formData.get("email"),
+            formData.get("password"),
+          );
+        else Auth.login(formData.get("email"), formData.get("password"));
+      };
+
+      window.confirmLogout = () => {
+        Modal.show(`
+                <div class="modal-confirm bg-card rounded">
+                    <div style="font-size:3rem; margin-bottom:1rem;">👋</div>
+                    <h3 class="font-bold mb-2">Leaving so soon?</h3>
+                    <p class="text-muted mb-6">Are you sure you want to log out of StudyPulse?</p>
+                    <div class="flex gap-4 justify-center">
+                        <button onclick="Modal.close()" class="btn btn-outline">Cancel</button>
+                        <button onclick="Auth.logout()" class="btn btn-danger">Yes, Log Out</button>
+                    </div>
+                </div>
+            `);
+      };
+
+      window.addTask = () => {
+        Modal.show(`
+                <div class="modal-content">
+                    <h2 class="text-xl font-bold mb-4">Add New Task</h2>
+                    <form onsubmit="event.preventDefault(); window.handleTaskSubmit(this)">
+                        <div class="input-group">
+                            <label class="input-label">Title</label>
+                            <input name="title" class="form-input" required placeholder="Study Math...">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Tag</label>
+                            <select name="tag" class="form-input">
+                                <option value="school">School</option>
+                                <option value="personal">Personal</option>
+                                <option value="work">Work</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-4 mt-6">
+                            <button type="button" onclick="Modal.close()" class="btn btn-outline flex-1">Cancel</button>
+                            <button type="submit" class="btn btn-primary flex-1">Add Task</button>
+                        </div>
+                    </form>
+                </div>
+            `);
+      };
+
+      window.handleTaskSubmit = (form) => {
+        const newTask = {
+          id: Date.now(),
+          title: form.title.value,
+          tag: form.tag.value,
+          completed: false,
+          createdAt: new Date().toISOString(),
+        };
+        Store.setState({ tasks: [...Store.state.tasks, newTask] });
+        Gamification.addXP(10);
+        Toast.show("Task added!", "success");
+        Modal.close();
+      };
+
+      window.deleteTask = (id) => {
+        if (confirm("Delete task?")) {
+          Store.setState({
+            tasks: Store.state.tasks.filter((t) => t.id !== id),
+          });
+        }
+      };
+
+      window.toggleTask = (id) => {
+        const tasks = [...Store.state.tasks];
+        const task = tasks.find((t) => t.id === id);
+        task.completed = !task.completed;
+        Store.setState({ tasks });
+        if (task.completed) Gamification.addXP(25);
+      };
+
+      window.logMood = (mood) => {
+        const log = { date: new Date().toISOString(), mood };
+        Store.setState({ moodLogs: [log, ...Store.state.moodLogs] });
+        Toast.show("Mood logged. Keep it up!", "success");
+        Gamification.addXP(5);
+      };
+
+      window.toggleMic = () => {
+        // Simulated voice command
+        Store.setState({ isMicListening: true });
+        Toast.show('Listening... (Try "Go to tasks")', "info");
+        setTimeout(() => {
+          Store.setState({ isMicListening: false });
+          Toast.show('Command recognized: "Go to tasks"', "success");
+          Store.setState({ view: "tasks" });
+        }, 2000);
+      };
+
+      // --- INIT ---
+      Store.subscribe(render);
+      render(Store.state); // First Render
+    </script>
+  </body>
+</html>

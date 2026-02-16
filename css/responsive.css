@@ -1,0 +1,41 @@
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+    .modern-auth-container {
+        grid-template-columns: 1fr;
+    }
+
+    .modern-auth-right {
+        display: none;
+    }
+
+    .modern-auth-left {
+        border-right: none;
+        padding: 40px 20px;
+    }
+
+    .toast {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+    }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+    .auth-header h1 {
+        font-size: 28px;
+    }
+
+    .auth-logo {
+        margin-bottom: 32px;
+    }
+
+    .social-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .modern-auth-left {
+        padding: 20px;
+    }
+}

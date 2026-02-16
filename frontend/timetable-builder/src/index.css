@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* small overrides to match app look */
+@layer base {
+  body {
+    @apply bg-slate-50 min-h-screen;
+  }
+}
+
+@layer components {
+  .body-bg {
+    @apply bg-slate-50 min-h-screen;
+  }
+  .card {
+    @apply bg-white shadow rounded-lg p-4;
+  }
+}

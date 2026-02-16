@@ -1,0 +1,9 @@
+{
+  "name": "student-study-backend-timetable",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "express-validator": "^6.15.0",
+    "mongoose": "^7.3.1"
+  }
+}
