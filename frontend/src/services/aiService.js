@@ -1,46 +1,19 @@
-import axios from 'axios';
+import { Gemini } from 'gemini-pro';
 
-const model = 'gemini-pro';
+const geminiClient = new Gemini({
+    apiKey: process.env.GEMINI_API_KEY,
+});
 
-const API_URL = 'https://api.example.com/ai';
-
-async function getStudyAdvice(userInput) {
+export const generateResponse = async (input) => {
     try {
-        const response = await axios.post(`${API_URL}/advice`, {
-            model,
-            input: userInput
+        const response = await geminiClient.generate({
+            prompt: input,
+            model: 'gemini-pro',
+            maxTokens: 150,
         });
-        return response.data.advice;
+        return response;
     } catch (error) {
-        console.error('Error getting study advice:', error);
-        return 'Sorry, we could not provide study advice at this time. Please try again later.';
+        console.error('Error generating response:', error);
+        throw new Error('Failed to generate response from Gemini AI');
     }
-}
-
-async function generateStudyPlan(userGoals) {
-    try {
-        const response = await axios.post(`${API_URL}/generate-plan`, {
-            model,
-            goals: userGoals
-        });
-        return response.data.studyPlan;
-    } catch (error) {
-        console.error('Error generating study plan:', error);
-        return 'Sorry, we could not generate a study plan at this moment. Please try again later.';
-    }
-}
-
-async function analyzePerformance(userData) {
-    try {
-        const response = await axios.post(`${API_URL}/performance`, {
-            model,
-            data: userData
-        });
-        return response.data.performanceAnalysis;
-    } catch (error) {
-        console.error('Error analyzing performance:', error);
-        return 'Sorry, we could not analyze your performance at this time. Please try again later.';
-    }
-}
-
-export { getStudyAdvice, generateStudyPlan, analyzePerformance };
+};
