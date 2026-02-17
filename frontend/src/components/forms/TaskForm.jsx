@@ -27,32 +27,32 @@ const TaskForm = ({ onSubmit, onClose }) => {
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [tagInput, setTagInput] = useState('');
     const [loading, setLoading] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         // Common fields
         type: 'task',
         title: '',
         details: '',
         subject: '',
-        
+
         // ⭐ NEW - Priority & Time Estimation
         priority: 'medium',
         estimatedMinutes: 30,
         tags: [],
-        
+
         // Scheduling
         dueDate: '',
         time: '',
         occurs: 'once',
         repeatFrequency: 'daily',
-        
+
         // Exam specific
         examType: 'exam',
         examMode: 'in-person',
         seat: '',
         room: '',
         duration: '',
-        
+
         // Class specific
         className: '',
         teacher: '',
@@ -82,27 +82,27 @@ const TaskForm = ({ onSubmit, onClose }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+
         try {
             const taskData = {
                 ...formData,
                 type: activeTab,
                 dueTime: formData.time,
             };
-            
-            // If using Redux
-            await dispatch(createTask(taskData)).unwrap();
-            
-            // Or if using prop function
+
+            // Check if parent component handles submission
             if (onSubmit) {
-                onSubmit(taskData);
+                await onSubmit(taskData);
+            } else {
+                // Otherwise use Redux directly (e.g. from Modal)
+                await dispatch(createTask(taskData)).unwrap();
             }
-            
+
             // Close modal if exists
             if (onClose) {
                 onClose();
             }
-            
+
             // Reset form
             setFormData({
                 type: 'task',
@@ -199,15 +199,14 @@ const TaskForm = ({ onSubmit, onClose }) => {
                             key={priority.value}
                             type="button"
                             onClick={() => handleChange('priority', priority.value)}
-                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${
-                                formData.priority === priority.value
+                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${formData.priority === priority.value
                                     ? priority.color === 'red'
                                         ? 'bg-red-100 dark:bg-red-900/30 border-2 border-red-500 text-red-700 dark:text-red-400'
                                         : priority.color === 'yellow'
-                                        ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 text-yellow-700 dark:text-yellow-400'
-                                        : 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500 text-green-700 dark:text-green-400'
+                                            ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 text-yellow-700 dark:text-yellow-400'
+                                            : 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500 text-green-700 dark:text-green-400'
                                     : 'bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                            }`}
+                                }`}
                         >
                             <span className="mr-2">{priority.emoji}</span>
                             {priority.label}
@@ -279,11 +278,10 @@ const TaskForm = ({ onSubmit, onClose }) => {
                             key={opt}
                             type="button"
                             onClick={() => handleChange('occurs', opt)}
-                            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                                formData.occurs === opt
+                            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.occurs === opt
                                     ? 'bg-blue-600 text-white shadow-md'
                                     : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                            }`}
+                                }`}
                         >
                             {opt === 'once' ? 'Once' : 'Repeating'}
                         </button>
@@ -393,11 +391,10 @@ const TaskForm = ({ onSubmit, onClose }) => {
                                 key={type}
                                 type="button"
                                 onClick={() => handleChange('examType', type)}
-                                className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
-                                    formData.examType === type
+                                className={`py-2.5 rounded-xl text-sm font-bold transition-all ${formData.examType === type
                                         ? 'bg-blue-600 text-white'
                                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                }`}
+                                    }`}
                             >
                                 {type.charAt(0).toUpperCase() + type.slice(1)}
                             </button>
@@ -415,11 +412,10 @@ const TaskForm = ({ onSubmit, onClose }) => {
                                 key={mode}
                                 type="button"
                                 onClick={() => handleChange('examMode', mode)}
-                                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                                    formData.examMode === mode
+                                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.examMode === mode
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'text-slate-400 hover:text-slate-600'
-                                }`}
+                                    }`}
                             >
                                 {mode === 'in-person' ? 'In Person' : 'Online'}
                             </button>
@@ -553,11 +549,10 @@ const TaskForm = ({ onSubmit, onClose }) => {
                                 key={mode}
                                 type="button"
                                 onClick={() => handleChange('mode', mode)}
-                                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                                    formData.mode === mode
+                                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.mode === mode
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'text-slate-400 hover:text-slate-600'
-                                }`}
+                                    }`}
                             >
                                 {mode === 'in-person' ? 'In Person' : 'Online'}
                             </button>
@@ -590,11 +585,10 @@ const TaskForm = ({ onSubmit, onClose }) => {
                             key={opt}
                             type="button"
                             onClick={() => handleChange('occurs', opt)}
-                            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                                formData.occurs === opt
+                            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.occurs === opt
                                     ? 'bg-blue-600 text-white shadow-md'
                                     : 'text-slate-400 hover:text-slate-600'
-                            }`}
+                                }`}
                         >
                             {opt === 'once' ? 'Once' : 'Repeating'}
                         </button>
@@ -647,11 +641,10 @@ const TaskForm = ({ onSubmit, onClose }) => {
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
-                        className={`px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-                            activeTab === tab.id
+                        className={`px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                        }`}
+                            }`}
                     >
                         <span className="mr-2">{tab.icon}</span>
                         {tab.label}

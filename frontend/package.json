@@ -9,9 +9,10 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@reduxjs/toolkit": "^2.5.1",
+        "@google/generative-ai": "^0.24.1",
+        "@reduxjs/toolkit": "^2.11.2",
         "@tailwindcss/vite": "^4.1.18",
-        "axios": "^1.7.9",
+        "axios": "^1.13.5",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
         "framer-motion": "^12.4.1",

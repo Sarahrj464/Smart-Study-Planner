@@ -10,6 +10,7 @@ out/
 # Env
 .env
 .env.local
+.env.*
 .env.*.local
 
 # Debug

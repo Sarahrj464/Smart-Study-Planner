@@ -71,6 +71,8 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    env_file:
+      - ./frontend/.env
     volumes:
       - ./frontend:/app
       - /app/node_modules

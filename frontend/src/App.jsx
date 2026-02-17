@@ -19,7 +19,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { loadUser } from './redux/slices/authSlice';
 
-import './styles/animations.css';
 
 const AppContent = () => {
     const location = useLocation();

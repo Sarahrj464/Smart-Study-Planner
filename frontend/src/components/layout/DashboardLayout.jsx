@@ -3,6 +3,7 @@ import Sidebar from '../common/Sidebar';
 import { Settings, User } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
+import FloatingCoach from '../ai/FloatingCoach'; // ⭐ ADD THIS LINE
 
 const DashboardLayout = () => {
     const { user } = useSelector((state) => state.auth);
@@ -11,7 +12,7 @@ const DashboardLayout = () => {
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 60000); // Update every minute
+        }, 60000);
         return () => clearInterval(timer);
     }, []);
 
@@ -58,7 +59,7 @@ const DashboardLayout = () => {
                                 <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">
                                     {user?.name || 'Student'}
                                 </p>
-                                <p className="text-[10px] text-slate-400 truncate max-w-[120px]">
+                                <p className="text-[10px] text-slate-400 truncate max-w-30">
                                     {user?.email}
                                 </p>
                             </div>
@@ -72,6 +73,10 @@ const DashboardLayout = () => {
                     </div>
                 </div>
             </main>
+
+            {/* ⭐ ADD THIS LINE - Floating AI Coach */}
+            <FloatingCoach />
+
         </div>
     );
 };

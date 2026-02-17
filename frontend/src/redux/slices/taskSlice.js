@@ -1,15 +1,14 @@
 // frontend/src/redux/slices/taskSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import apiClient from '../api/apiClient';
 
-const API_URL = 'http://localhost:5000/api/v1/tasks';
 
 // Async Thunks
 export const fetchTasks = createAsyncThunk(
   'tasks/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(API_URL);
+      const response = await apiClient.get('/tasks');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -21,7 +20,7 @@ export const createTask = createAsyncThunk(
   'tasks/create',
   async (taskData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(API_URL, taskData);
+      const response = await apiClient.post('/tasks', taskData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -33,7 +32,7 @@ export const updateTask = createAsyncThunk(
   'tasks/update',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`${API_URL}/${id}`, data);
+      const response = await apiClient.patch(`/tasks/${id}`, data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -45,7 +44,7 @@ export const deleteTask = createAsyncThunk(
   'tasks/delete',
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      await apiClient.delete(`/tasks/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -58,7 +57,7 @@ export const toggleComplete = createAsyncThunk(
   async (id, { getState, rejectWithValue }) => {
     try {
       const task = getState().tasks.items.find(t => t._id === id);
-      const response = await axios.patch(`${API_URL}/${id}`, {
+      const response = await apiClient.patch(`/tasks/${id}`, {
         completed: !task.completed,
         completedAt: !task.completed ? new Date() : null
       });
@@ -100,12 +99,12 @@ const taskSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       // Create Task
       .addCase(createTask.fulfilled, (state, action) => {
         state.items.push(action.payload);
       })
-      
+
       // Update Task
       .addCase(updateTask.fulfilled, (state, action) => {
         const index = state.items.findIndex(t => t._id === action.payload._id);
@@ -113,12 +112,12 @@ const taskSlice = createSlice({
           state.items[index] = action.payload;
         }
       })
-      
+
       // Delete Task
       .addCase(deleteTask.fulfilled, (state, action) => {
         state.items = state.items.filter(t => t._id !== action.payload);
       })
-      
+
       // Toggle Complete
       .addCase(toggleComplete.fulfilled, (state, action) => {
         const index = state.items.findIndex(t => t._id === action.payload._id);
@@ -136,7 +135,7 @@ export const selectAllTasks = (state) => state.tasks.items;
 
 export const selectFilteredTasks = (state) => {
   const { items, filter, sortBy } = state.tasks;
-  
+
   // Filter
   let filtered = items;
   if (filter === 'active') {
@@ -144,7 +143,7 @@ export const selectFilteredTasks = (state) => {
   } else if (filter === 'completed') {
     filtered = items.filter(t => t.completed);
   }
-  
+
   // Sort
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'priority') {
@@ -156,7 +155,7 @@ export const selectFilteredTasks = (state) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     }
   });
-  
+
   return sorted;
 };
 
