@@ -4,7 +4,7 @@ import ScrollReveal from "./ScrollReveal";
 
 const FinalCTA = ({ onOpenAuth }) => {
     return (
-        <section className="py-24 px-6 bg-white dark:bg-slate-950 overflow-hidden">
+        <section className="py-24 px-8 md:px-20 bg-white dark:bg-slate-950 overflow-hidden">
             <ScrollReveal direction="up" distance={60}>
                 <motion.div
                     whileHover={{ scale: 1.01 }}

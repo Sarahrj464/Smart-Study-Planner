@@ -1,4 +1,5 @@
 // frontend/src/components/ai/StudyCoach.jsx
+
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Send, Bot, User, Sparkles } from "lucide-react";

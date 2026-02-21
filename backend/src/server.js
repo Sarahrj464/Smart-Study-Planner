@@ -26,6 +26,7 @@ const gamification = require('./routes/gamification');
 const rooms = require('./routes/studyRoom');
 const tasks = require('./routes/taskRoutes');
 const goals = require('./routes/goal');
+const aiChat = require('./routes/aiChat');
 
 const { Server } = require('socket.io');
 
@@ -77,6 +78,7 @@ app.use('/api/v1/blogs', blog);
 app.use('/api/v1/gamification', gamification);
 app.use('/api/v1/rooms', rooms);
 app.use('/api/v1/goals', goals);
+app.use('/api/v1/ai', aiChat);
 
 // Socket.io integration
 const studyRoomHandler = require('./sockets/studyRoomHandler');

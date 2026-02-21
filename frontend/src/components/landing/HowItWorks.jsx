@@ -34,7 +34,7 @@ const HowItWorks = () => {
     };
 
     return (
-        <section id="wellness" className="py-24 px-6 bg-white dark:bg-slate-950">
+        <section id="wellness" className="py-24 px-8 md:px-20 bg-white dark:bg-slate-950">
             <div className="max-w-7xl mx-auto">
                 <ScrollReveal direction="up" className="text-center max-w-2xl mx-auto mb-20 space-y-4">
                     <h2 className="text-sm font-bold text-blue-600 uppercase tracking-wider">Process</h2>

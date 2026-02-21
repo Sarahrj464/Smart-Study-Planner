@@ -63,7 +63,7 @@ const Features = () => {
     };
 
     return (
-        <section id="features" className="py-24 px-6 bg-white dark:bg-slate-950 transition-colors">
+        <section id="features" className="py-24 px-8 md:px-20 bg-white dark:bg-slate-950 transition-colors">
             <div className="max-w-7xl mx-auto">
                 <ScrollReveal direction="left" className="max-w-xl mb-16">
                     <h2 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-4">Features</h2>

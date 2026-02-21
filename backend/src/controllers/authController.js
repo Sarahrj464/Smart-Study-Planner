@@ -11,10 +11,12 @@ exports.signup = async (req, res, next) => {
         console.log(`📝 Signup attempt: ${email}`);
         email = email.toLowerCase().trim();
 
+        /* 
         // Check for authentic Google account
         if (!email.endsWith('@gmail.com')) {
             return next(new ErrorResponse('Please use a valid Google account (@gmail.com)', 400));
         }
+        */
 
         // Create user
         const user = await User.create({
@@ -36,13 +38,13 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     try {
         let { email, password } = req.body;
-        console.log(`🔐 Login attempt: ${email}`);
-        email = email.toLowerCase().trim();
 
         // Validate email & password
         if (!email || !password) {
             return next(new ErrorResponse('Please provide an email and password', 400));
         }
+
+        email = email.toLowerCase().trim();
 
         // Check for user
         const user = await User.findOne({ email }).select('+password');

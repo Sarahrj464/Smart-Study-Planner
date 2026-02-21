@@ -34,13 +34,17 @@ const Navbar = ({ onOpenAuth }) => {
                 <div className="absolute inset-x-0 bottom-0 h-px bg-white/20 opacity-50" />
             )}
 
-            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative z-30 text-white">
+            <div className="max-w-[1600px] mx-auto px-6 md:px-10 flex items-center justify-between relative z-30 text-white">
                 {/* Logo */}
-                <Link to="/" className="flex items-center gap-4 group">
+                <Link
+                    to="/"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="flex items-center gap-4 group"
+                >
                     <img
                         src={logo}
                         alt="StudyPulse Logo"
-                        className="h-12 w-auto object-contain transition-transform group-hover:scale-110 drop-shadow-lg"
+                        className="h-16 w-auto object-contain transition-transform group-hover:scale-110 drop-shadow-lg"
                     />
                     <span className="font-heading text-2xl md:text-3xl font-black tracking-tight italic text-white drop-shadow-md">
                         StudyPulse
@@ -49,6 +53,13 @@ const Navbar = ({ onOpenAuth }) => {
 
                 {/* Desktop Menu */}
                 <div className={`hidden lg:flex items-center px-4 py-2 rounded-2xl border border-white/20 bg-white/10 transition-all duration-300`}>
+                    <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="px-5 py-2 text-sm font-bold transition-all relative group/link text-white hover:text-blue-50"
+                    >
+                        Home
+                        <span className="absolute bottom-1 left-5 right-5 h-0.5 scale-x-0 group-hover/link:scale-x-100 transition-transform origin-center rounded-full bg-white" />
+                    </button>
                     {navLinks.map((link) => (
                         <a
                             key={link.name}
@@ -59,7 +70,6 @@ const Navbar = ({ onOpenAuth }) => {
                             <span className="absolute bottom-1 left-5 right-5 h-0.5 scale-x-0 group-hover/link:scale-x-100 transition-transform origin-center rounded-full bg-white" />
                         </a>
                     ))}
-
                 </div>
 
                 {/* Auth & Theme (Desktop) */}

@@ -17,13 +17,17 @@ const Navbar = () => {
 
     return (
         <nav className="bg-sky-50/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-sky-100/50 dark:border-slate-800 sticky top-0 z-50 transition-all duration-300">
-            <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-3 group">
+            <div className="max-w-[1600px] mx-auto px-6 md:px-8 h-20 flex items-center justify-between">
+                <Link
+                    to="/"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="flex items-center gap-3 group"
+                >
                     <div className="relative">
                         <img
                             src={logo}
                             alt="StudyPulse Logo"
-                            className="h-12 w-auto object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
+                            className="h-16 w-auto object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
                         />
                         <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -33,6 +37,7 @@ const Navbar = () => {
                 </Link>
 
                 <div className="hidden lg:flex items-center space-x-10">
+                    <NavLink to="/" icon={<LayoutDashboard size={18} />} label="Home" isHome />
                     {isAuthenticated && (
                         <div className="flex items-center space-x-6 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm">
                             <NavLink to="/dashboard" icon={<LayoutDashboard size={18} />} label="Dashboard" />
@@ -89,9 +94,10 @@ const Navbar = () => {
     );
 };
 
-const NavLink = ({ to, icon, label }) => (
+const NavLink = ({ to, icon, label, isHome }) => (
     <Link
         to={to}
+        onClick={isHome ? () => window.scrollTo({ top: 0, behavior: 'smooth' }) : undefined}
         className="flex items-center space-x-2 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all text-sm font-bold rounded-xl hover:bg-white dark:hover:bg-slate-900 group"
     >
         <div className="group-hover:scale-110 transition-transform">{icon}</div>

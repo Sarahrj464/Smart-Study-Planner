@@ -134,7 +134,7 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
                 </div>
             </div>
 
-            <div className="flex-1 mt-4 relative">
+            <div className="flex-1 mt-4 relative min-h-[250px]">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
@@ -292,7 +292,7 @@ const WeeklyProgressCard = ({ data, loading }) => {
             </div>
 
             {/* Content & Progress */}
-            <div className="flex-1 mt-2">
+            <div className="flex-1 mt-2 min-h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 30, right: 10, left: 10, bottom: 0 }}>
                         <defs>
@@ -422,7 +422,7 @@ const MonthProgressCard = ({ data, loading, productivityScore }) => {
                 </div>
 
                 {/* Concentric Rings Right */}
-                <div className="relative flex-1 h-full flex items-center justify-center">
+                <div className="relative flex-1 min-h-[280px] h-full flex items-center justify-center">
                     {chartData.some(d => d.displayValue > 0) ? (
                         <>
                             <ResponsiveContainer width="100%" height="100%">

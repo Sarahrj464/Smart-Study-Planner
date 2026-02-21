@@ -42,14 +42,23 @@ const Hero = ({ onOpenAuth }) => {
             x: 0,
             scale: 1,
             transition: { duration: 0.8, ease: "easeOut", delay: 0 }
+        },
+        floating: {
+            y: [0, -20, 0],
+            transition: {
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+            }
         }
     };
 
     return (
         <section ref={sectionRef} className="relative pt-32 pb-24 overflow-hidden bg-gradient-to-br from-[#EDF5FF] via-[#F8FBFF] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors">
             {/* Soft Ambient Glows for Calm Feel */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-100/50 dark:bg-blue-900/20 blur-[120px] rounded-full -z-10 mix-blend-multiply dark:mix-blend-screen transition-colors" />
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[500px] bg-indigo-100/50 dark:bg-indigo-900/20 blur-[100px] rounded-full -z-10 mix-blend-multiply dark:mix-blend-screen transition-colors" />
+            <div className="absolute top-0 left-1/4 -translate-x-1/2 w-[1000px] h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[150px] rounded-full -z-10 mix-blend-multiply dark:mix-blend-screen transition-all duration-1000" />
+            <div className="absolute bottom-0 right-1/4 w-[800px] h-[600px] bg-indigo-200/40 dark:bg-indigo-600/10 blur-[130px] rounded-full -z-10 mix-blend-multiply dark:mix-blend-screen transition-all duration-1000" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/50 dark:bg-slate-950/50 -z-20" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -137,20 +146,28 @@ const Hero = ({ onOpenAuth }) => {
                         animate="visible"
                         className="relative lg:block hidden -mt-20"
                     >
-                        <div className="relative">
+                        <div className="relative group">
+                            {/* Decorative background glow behind the image */}
+                            <div className="absolute -inset-4 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 blur-2xl rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
                             {/* Main image with pure opacity blending */}
-                            <motion.img
-                                key={darkMode ? 'dark' : 'light'}
-                                src={darkMode ? blackHeroImage : heroImage}
-                                alt="StudyPulse App - Students using timer and task management"
-                                className="relative w-full h-auto opacity-95"
-                                style={{
-                                    filter: 'brightness(1.02) saturate(1.05)',
-                                    willChange: 'transform, opacity'
-                                }}
-                                whileHover={{ scale: 1.02, opacity: 1 }}
-                                transition={{ duration: 0.3 }}
-                            />
+                            <motion.div
+                                animate="floating"
+                                variants={imageVariants}
+                            >
+                                <motion.img
+                                    key={darkMode ? 'dark' : 'light'}
+                                    src={darkMode ? blackHeroImage : heroImage}
+                                    alt="StudyPulse App - Students using timer and task management"
+                                    className="relative w-full h-auto opacity-95"
+                                    style={{
+                                        filter: 'brightness(1.02) saturate(1.05)',
+                                        willChange: 'transform, opacity'
+                                    }}
+                                    whileHover={{ scale: 1.02, opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                />
+                            </motion.div>
                             {/* Hidden preloader for the other theme image */}
                             <img
                                 src={darkMode ? heroImage : blackHeroImage}

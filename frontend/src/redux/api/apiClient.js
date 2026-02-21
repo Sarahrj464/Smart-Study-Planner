@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+    baseURL: "/api/v1",
     headers: {
         'Content-Type': 'application/json',
     },
@@ -26,10 +26,16 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            // Redux state will handle the unauthorized state
+        if (error.response) {
+            console.error(`❌ API Error [${error.response.status}]:`, error.response.data);
+            if (error.response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        } else if (error.request) {
+            console.error("❌ Network Error: No response received from server.");
+        } else {
+            console.error("❌ Request Setup Error:", error.message);
         }
         return Promise.reject(error);
     }

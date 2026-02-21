@@ -29,7 +29,7 @@ const WhyStudyPulse = () => {
     };
 
     return (
-        <section ref={sectionRef} id="rooms" className="py-24 px-6 bg-slate-50/30 dark:bg-slate-900/20 overflow-hidden text-left relative">
+        <section ref={sectionRef} id="rooms" className="py-24 px-8 md:px-20 bg-slate-50/30 dark:bg-slate-900/20 overflow-hidden text-left relative">
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     <motion.div
