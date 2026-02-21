@@ -1,10 +1,15 @@
 import apiClient from '../api/apiClient';
 
 export const dashboardService = {
-    getStats: async (retries = 3, delay = 1000) => {
+    getStats: async (timeframe = 'all', options = {}, retries = 3, delay = 1000) => {
+        const { startOfToday, endOfToday } = options;
+        let url = `/dashboard?timeframe=${timeframe}`;
+        if (startOfToday) url += `&startOfToday=${startOfToday}`;
+        if (endOfToday) url += `&endOfToday=${endOfToday}`;
+
         for (let i = 0; i < retries; i++) {
             try {
-                const response = await apiClient.get('/dashboard');
+                const response = await apiClient.get(url);
                 return response.data;
             } catch (err) {
                 if (i === retries - 1) throw err;

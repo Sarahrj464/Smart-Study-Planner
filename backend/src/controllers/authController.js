@@ -37,11 +37,11 @@ exports.signup = async (req, res, next) => {
 // @access  Public
 exports.login = async (req, res, next) => {
     try {
-        let { email, password } = req.body;
+        let { email, password } = req.body || {};
 
-        // Validate email & password
-        if (!email || !password) {
-            return next(new ErrorResponse('Please provide an email and password', 400));
+        // Robust Validation
+        if (!email || typeof email !== 'string' || !password || typeof password !== 'string') {
+            return next(new ErrorResponse('Please provide a valid email and password', 400));
         }
 
         email = email.toLowerCase().trim();
@@ -50,14 +50,14 @@ exports.login = async (req, res, next) => {
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
-            return next(new ErrorResponse('Invalid credentials', 401));
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         // Check if password matches
         const isMatch = await user.matchPassword(password);
 
         if (!isMatch) {
-            return next(new ErrorResponse('Invalid credentials', 401));
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         sendTokenResponse(user, 200, res);

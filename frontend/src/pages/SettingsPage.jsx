@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Bell, Moon, Lock, Globe, ChevronRight } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from '../redux/slices/themeSlice';
+import WhatsAppSettings from '../components/profile/WhatsAppSettings';
 
 const SettingsPage = () => {
     const { darkMode } = useSelector((state) => state.theme);
@@ -49,12 +50,10 @@ const SettingsPage = () => {
                         </div>
                         <button
                             onClick={() => dispatch(toggleTheme())}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${darkMode ? 'bg-blue-600' : 'bg-slate-200'
-                                }`}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${darkMode ? 'bg-blue-600' : 'bg-slate-200'}`}
                         >
                             <span
-                                className={`${darkMode ? 'translate-x-6' : 'translate-x-1'
-                                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                className={`${darkMode ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                             />
                         </button>
                     </div>
@@ -89,6 +88,16 @@ const SettingsPage = () => {
                     />
                 </div>
             </motion.div>
+
+            {/* ✅ WhatsApp Notifications Section */}
+            <motion.div variants={itemVariants}>
+                <div className="mb-3 px-1">
+                    <h2 className="font-bold text-slate-700 dark:text-slate-200 text-lg">💬 WhatsApp Notifications</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Receive task reminders and alerts on WhatsApp</p>
+                </div>
+                <WhatsAppSettings />
+            </motion.div>
+
         </motion.div>
     );
 };

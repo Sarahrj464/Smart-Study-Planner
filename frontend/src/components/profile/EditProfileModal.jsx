@@ -114,7 +114,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
                                     <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-3xl font-bold text-slate-500 dark:text-slate-400 border-4 border-white dark:border-slate-900 shadow-md overflow-hidden">
                                         {previewImage ? (
                                             <img
-                                                src={previewImage.startsWith('data:') || previewImage.startsWith('http') ? previewImage : `http://localhost:5000${previewImage}`}
+                                                src={previewImage.startsWith('data:') || previewImage.startsWith('http') ? previewImage : `http://localhost:5003${previewImage}`}
                                                 alt="Profile Preview"
                                                 className="w-full h-full object-cover"
                                             />

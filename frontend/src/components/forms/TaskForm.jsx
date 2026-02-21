@@ -200,12 +200,12 @@ const TaskForm = ({ onSubmit, onClose }) => {
                             type="button"
                             onClick={() => handleChange('priority', priority.value)}
                             className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${formData.priority === priority.value
-                                    ? priority.color === 'red'
-                                        ? 'bg-red-100 dark:bg-red-900/30 border-2 border-red-500 text-red-700 dark:text-red-400'
-                                        : priority.color === 'yellow'
-                                            ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 text-yellow-700 dark:text-yellow-400'
-                                            : 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500 text-green-700 dark:text-green-400'
-                                    : 'bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                                ? priority.color === 'red'
+                                    ? 'bg-red-100 dark:bg-red-900/30 border-2 border-red-500 text-red-700 dark:text-red-400'
+                                    : priority.color === 'yellow'
+                                        ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 text-yellow-700 dark:text-yellow-400'
+                                        : 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500 text-green-700 dark:text-green-400'
+                                : 'bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                                 }`}
                         >
                             <span className="mr-2">{priority.emoji}</span>
@@ -279,8 +279,8 @@ const TaskForm = ({ onSubmit, onClose }) => {
                             type="button"
                             onClick={() => handleChange('occurs', opt)}
                             className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.occurs === opt
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                ? 'bg-blue-600 text-white shadow-md'
+                                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                                 }`}
                         >
                             {opt === 'once' ? 'Once' : 'Repeating'}
@@ -346,6 +346,7 @@ const TaskForm = ({ onSubmit, onClose }) => {
     );
 
     // ============ EXAM FIELDS ============
+    // ============ EXAM FIELDS ============
     const renderExamFields = () => (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -392,8 +393,8 @@ const TaskForm = ({ onSubmit, onClose }) => {
                                 type="button"
                                 onClick={() => handleChange('examType', type)}
                                 className={`py-2.5 rounded-xl text-sm font-bold transition-all ${formData.examType === type
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                     }`}
                             >
                                 {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -413,8 +414,8 @@ const TaskForm = ({ onSubmit, onClose }) => {
                                 type="button"
                                 onClick={() => handleChange('examMode', mode)}
                                 className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.examMode === mode
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'text-slate-400 hover:text-slate-600'
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'text-slate-400 hover:text-slate-600'
                                     }`}
                             >
                                 {mode === 'in-person' ? 'In Person' : 'Online'}
@@ -501,6 +502,56 @@ const TaskForm = ({ onSubmit, onClose }) => {
                     />
                 </div>
             </div>
+
+            {/* ⭐ New Priority & Tags for Exams */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Priority *
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                        {['high', 'medium', 'low'].map(p => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => handleChange('priority', p)}
+                                className={`py-3 px-4 rounded-xl font-bold text-xs transition-all ${formData.priority === p
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                    }`}
+                            >
+                                {p.charAt(0).toUpperCase() + p.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Tag size={14} />
+                        Tags (Press Enter)
+                    </label>
+                    <input
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyPress={handleAddTag}
+                        placeholder="e.g. final, important"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                </div>
+            </div>
+
+            {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.tags.map((tag, index) => (
+                        <span key={index} className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold flex items-center gap-2">
+                            {tag}
+                            <X size={14} className="cursor-pointer" onClick={() => handleRemoveTag(tag)} />
+                        </span>
+                    ))}
+                </div>
+            )}
         </>
     );
 
@@ -550,8 +601,8 @@ const TaskForm = ({ onSubmit, onClose }) => {
                                 type="button"
                                 onClick={() => handleChange('mode', mode)}
                                 className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.mode === mode
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'text-slate-400 hover:text-slate-600'
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'text-slate-400 hover:text-slate-600'
                                     }`}
                             >
                                 {mode === 'in-person' ? 'In Person' : 'Online'}
@@ -586,8 +637,8 @@ const TaskForm = ({ onSubmit, onClose }) => {
                             type="button"
                             onClick={() => handleChange('occurs', opt)}
                             className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${formData.occurs === opt
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-slate-400 hover:text-slate-600'
+                                ? 'bg-blue-600 text-white shadow-md'
+                                : 'text-slate-400 hover:text-slate-600'
                                 }`}
                         >
                             {opt === 'once' ? 'Once' : 'Repeating'}
@@ -624,6 +675,56 @@ const TaskForm = ({ onSubmit, onClose }) => {
                     />
                 </div>
             </div>
+
+            {/* ⭐ New Priority & Tags for Classes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Priority *
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                        {['high', 'medium', 'low'].map(p => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => handleChange('priority', p)}
+                                className={`py-3 px-4 rounded-xl font-bold text-xs transition-all ${formData.priority === p
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                    }`}
+                            >
+                                {p.charAt(0).toUpperCase() + p.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Tag size={14} />
+                        Tags (Press Enter)
+                    </label>
+                    <input
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyPress={handleAddTag}
+                        placeholder="e.g. mandatory, elective"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                </div>
+            </div>
+
+            {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.tags.map((tag, index) => (
+                        <span key={index} className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold flex items-center gap-2">
+                            {tag}
+                            <X size={14} className="cursor-pointer" onClick={() => handleRemoveTag(tag)} />
+                        </span>
+                    ))}
+                </div>
+            )}
         </>
     );
 
@@ -642,8 +743,8 @@ const TaskForm = ({ onSubmit, onClose }) => {
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
                         className={`px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                             }`}
                     >
                         <span className="mr-2">{tab.icon}</span>

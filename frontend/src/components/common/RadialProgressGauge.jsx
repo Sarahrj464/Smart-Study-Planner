@@ -24,7 +24,7 @@ const RadialProgressGauge = ({ value = 0, color = "#2563EB", size = 100 }) => {
                         paddingAngle={0}
                         dataKey="value"
                         stroke="none"
-                        animationDuration={1000}
+                        animationDuration={300}
                     >
                         {data.map((entry, index) => (
                             <Cell

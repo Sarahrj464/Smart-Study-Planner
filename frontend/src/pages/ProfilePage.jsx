@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { LogOut, Trash2, Edit2, ChevronRight, Clock, AlertCircle, CheckCircle, Flame } from 'lucide-react';
-import LogoutModal from '../components/common/LogoutModal';
+import ConfirmModal from '../components/common/ConfirmModal';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import { logout } from '../redux/slices/authSlice';
 import { dashboardService } from '../redux/api/dashboardService';
@@ -78,7 +78,7 @@ const ProfilePage = () => {
                     <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-3xl font-black text-blue-600 border-4 border-white shadow-2xl overflow-hidden relative z-10">
                         {user?.profilePicture && user.profilePicture !== 'default-avatar.png' ? (
                             <img
-                                src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:5000${user.profilePicture}`}
+                                src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:5003${user.profilePicture}`}
                                 alt={user.name}
                                 className="w-full h-full object-cover"
                             />
@@ -136,7 +136,7 @@ const ProfilePage = () => {
 
             {/* Settings Menu */}
             <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-lg shadow-slate-200/50 transition-all hover:shadow-xl hover:shadow-blue-500/10 group">
+                <div className="bg-white dark:bg-slate-900 rounded-4xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-none glass-card group">
                     <MenuItem
                         icon={<LogOut size={24} />}
                         label="Log out"
@@ -144,7 +144,7 @@ const ProfilePage = () => {
                         onClick={() => setShowLogoutModal(true)}
                     />
                 </div>
-                <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-lg shadow-slate-200/50 transition-all hover:shadow-xl hover:shadow-rose-500/10 group">
+                <div className="bg-white dark:bg-slate-900 rounded-4xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-none glass-card group">
                     <MenuItem
                         icon={<Trash2 size={24} />}
                         label="Delete Account"
@@ -154,18 +154,23 @@ const ProfilePage = () => {
                 </div>
             </motion.div>
 
-            <LogoutModal
+            <ConfirmModal
                 isOpen={showLogoutModal}
                 onClose={() => setShowLogoutModal(false)}
                 onConfirm={handleLogout}
+                title="Ready to leave?"
+                message="You can always come back and pick up where you left off. See you soon!"
+                type="info"
+                confirmText="Log Out"
             />
 
-            <LogoutModal
+            <ConfirmModal
                 isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleDeleteAccount}
-                title="Delete Account"
-                message="Are you sure you want to delete your account? This action cannot be undone."
+                title="Delete Account?"
+                message="Are you sure you want to delete your account? This action is permanent and all your data will be lost."
+                type="danger"
                 confirmText="Delete Account"
             />
 
@@ -178,7 +183,7 @@ const ProfilePage = () => {
 };
 
 const StatCard = ({ icon, bg, label, value, sub, color }) => (
-    <div className={`p-6 rounded-2xl ${bg} border border-slate-100 dark:border-slate-800/50 flex flex-col justify-between min-h-[140px] transition-transform hover:scale-[1.02]`}>
+    <div className={`p-6 rounded-2xl ${bg} dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 flex flex-col justify-between min-h-[140px] glass-card`}>
         <div className="flex items-center gap-2 mb-2">
             {icon}
             <span className="font-bold text-slate-700 dark:text-slate-200 text-sm">{label}</span>

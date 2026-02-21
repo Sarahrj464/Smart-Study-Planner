@@ -1,85 +1,85 @@
-import React, { useState } from "react";
+const express = require('express');
+const router = express.Router();
 
-const AIChat = () => {
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "Hi Sarah 👋 How can I help you study today?" },
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMsg = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
-
+router.post('/chat', async (req, res) => {
     try {
-      const res = await fetch("/api/v1/ai/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: input }),
-      });
+        const {
+            question,
+            customSystemPrompt,
+            tasks,
+            exams,
+            hoursToday,
+            streak,
+            urgentTasks,
+            pendingCount
+        } = req.body;
 
-      const data = await res.json();
+        const pendingTasks = tasks?.filter(t => !t.completed) || [];
+        const highPriority = pendingTasks.filter(t =>
+            t.priority === 'High' || t.priority === 'high'
+        );
 
-      const aiMsg = { role: "ai", text: data.reply };
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: "⚠️ Error connecting to AI" },
-      ]);
+        const defaultSystemPrompt = `You are an encouraging AI study coach for StudyPulse.
+
+Student Status:
+- Total Tasks: ${tasks?.length || 0}
+- Pending: ${pendingCount || pendingTasks.length}
+- High Priority: ${highPriority.length}
+- Urgent/Overdue: ${urgentTasks || 0}
+- Study Hours Today: ${hoursToday || 0}h
+- Streak: ${streak || 0} days
+- Upcoming Exams: ${exams || 'None'}
+- Top Pending: ${pendingTasks.slice(0, 3).map(t => t.title).join(', ') || 'None'}
+
+Based on this real data:
+1. ${(urgentTasks || 0) > 0 ? `⚠️ Address ${urgentTasks} overdue/urgent tasks first` : 'Acknowledge their progress'}
+2. Give 3 specific actionable tips based on their actual tasks
+3. End with one short motivational line
+
+Keep response under 150 words. Be personalized and encouraging.`;
+
+        // ✅ If customSystemPrompt provided use it, else use default
+        const finalSystemPrompt = customSystemPrompt || defaultSystemPrompt;
+
+        console.log('🤖 Using prompt type:', customSystemPrompt ? 'CUSTOM (task creation)' : 'DEFAULT (chat)');
+
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "http://localhost:5173",
+                "X-Title": "StudyPulse"
+            },
+            body: JSON.stringify({
+                model: "openai/gpt-3.5-turbo",
+                messages: [
+                    { role: "system", content: finalSystemPrompt },
+                    { role: "user", content: question || "How should I study today?" }
+                ],
+                temperature: customSystemPrompt ? 0.1 : 0.8,
+                max_tokens: customSystemPrompt ? 1000 : 300
+            })
+        });
+
+        const text = await response.text();
+        const data = JSON.parse(text);
+
+        if (data.error) throw new Error(data.error.message);
+
+        const reply = data.choices[0].message.content;
+        console.log('🤖 AI reply preview:', reply.slice(0, 100));
+
+        res.json({ success: true, reply });
+
+    } catch (error) {
+        console.error("AI Error:", error.message);
+        res.status(500).json({
+            success: false,
+            reply: "AI unavailable. Please try again.",
+            error: error.message
+        });
     }
+});
 
-    setLoading(false);
-  };
-
-  return (
-    <div className="flex flex-col h-[80vh] max-w-2xl mx-auto border rounded-2xl shadow">
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`p-3 rounded-2xl max-w-[70%] ${msg.role === "user"
-                ? "bg-blue-500 text-white ml-auto"
-                : "bg-white border"
-              }`}
-          >
-            {msg.text}
-          </div>
-        ))}
-
-        {loading && (
-          <div className="bg-white border p-3 rounded-2xl w-fit">
-            Typing...
-          </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div className="p-3 border-t flex gap-2">
-        <input
-          className="flex-1 border rounded-xl px-3 py-2 outline-none"
-          placeholder="Ask your AI study coach..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-blue-600 text-white px-4 rounded-xl"
-        >
-          Send
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default AIChat;
+module.exports = router;

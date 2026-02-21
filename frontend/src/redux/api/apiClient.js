@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: "/api/v1",
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5003/api/v1", 
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -21,7 +22,6 @@ apiClient.interceptors.request.use(
     }
 );
 
-
 // Add a response interceptor to handle auth errors
 apiClient.interceptors.response.use(
     (response) => response,
@@ -34,6 +34,7 @@ apiClient.interceptors.response.use(
             }
         } else if (error.request) {
             console.error("❌ Network Error: No response received from server.");
+            console.error("🔍 URL Failed:", error.config?.url);
         } else {
             console.error("❌ Request Setup Error:", error.message);
         }

@@ -38,14 +38,16 @@ const AuthModal = ({ mode, onClose, setMode, initialEmail = '' }) => {
             console.error("Auth Error:", err);
             // Try to extract the error message from various possible locations in the response
             const message =
+                err.response?.data?.message ||
                 err.response?.data?.error ||
                 (err.response?.data?.errors && err.response.data.errors.length > 0 ? err.response.data.errors[0].msg : null) ||
-                err.response?.data?.message ||
                 err.message ||
                 'Authentication failed. Please try again.';
 
+            console.log("Detailed Error from Server:", err.response?.data);
+
             dispatch(loginFailure(message));
-            toast.error(message);
+            toast.error(message, { duration: 5000 });
         }
     };
 

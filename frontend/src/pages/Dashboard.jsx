@@ -37,8 +37,11 @@ import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import toast from 'react-hot-toast';
 import ActionModal from '../components/common/ActionModal';
+import ConfirmModal from '../components/common/ConfirmModal';
+import TaskItem from '../components/common/TaskItem';
+import { taskService } from '../redux/api/taskService';
+import { differenceInDays, isBefore, startOfDay } from 'date-fns';
 
 const locales = {
     'en-US': enUS,
@@ -55,15 +58,47 @@ const localizer = dateFnsLocalizer({
 // Helper to convert Tasks to Calendar Events
 const mapTasksToEvents = (tasks) => {
     if (!tasks) return [];
-    return tasks
-        .filter(t => !t.completed)
-        .map(t => ({
-            title: t.title,
-            start: new Date(t.dueDate),
-            end: new Date(t.dueDate),
-            type: t.type.toLowerCase(),
-            allDay: true
-        }));
+    return [...tasks]
+        .sort((a, b) => {
+            // Sort completed to the bottom
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            const priorities = { 'high': 3, 'medium': 2, 'low': 1 };
+            const pA = priorities[(a.priority || 'medium').toLowerCase()] || 2;
+            const pB = priorities[(b.priority || 'medium').toLowerCase()] || 2;
+            return pB - pA;
+        })
+        .map(t => {
+            let start = new Date(t.dueDate);
+            if (t.time) {
+                try {
+                    const timeStr = t.time.toLowerCase().trim();
+                    const isPM = timeStr.includes('pm');
+                    const isAM = timeStr.includes('am');
+                    const cleanTime = timeStr.replace(/[ap]m/g, '').trim();
+                    const [hStr, mStr] = cleanTime.split(':');
+                    let hours = parseInt(hStr);
+                    const minutes = mStr ? parseInt(mStr) : 0;
+                    if (isPM && hours < 12) hours += 12;
+                    if (isAM && hours === 12) hours = 0;
+                    start.setHours(hours, minutes, 0, 0);
+                } catch (e) {
+                    start.setHours(10, 0, 0, 0);
+                }
+            } else {
+                start.setHours(10, 0, 0, 0);
+            }
+
+            return {
+                title: t.title,
+                start,
+                end: start,
+                type: (t.type || 'task').toLowerCase(),
+                priority: (t.priority || 'medium').toLowerCase(),
+                completed: t.completed,
+                tags: t.tags || [],
+                allDay: false
+            };
+        });
 };
 
 // Utility Components
@@ -79,8 +114,8 @@ const SectionHeader = ({ title, link }) => (
 );
 
 const QuickActionButton = ({ to, icon, iconColor, label, desc }) => (
-    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
-        <Link to={to} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 transition-all shadow-sm group">
+    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+        <Link to={to} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-blue-200 dark:hover:border-blue-800 transition-all shadow-sm group">
             <div className={`p-2 ${iconColor} rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300`}>
                 {cloneElement(icon, { size: 16 })}
             </div>
@@ -111,7 +146,7 @@ import {
     PolarAngleAxis
 } from 'recharts';
 
-const SmartFocusInsightsCard = ({ data, loading }) => {
+const SmartFocusInsightsCard = ({ data, loading, onTimeframeChange, currentTimeframe }) => {
     const displayData = data && data.length > 0 ? data : [
         { time: '10:00 AM', value: 0, secondary: 0 },
         { time: '1:00 PM', value: 0, secondary: 0 },
@@ -119,22 +154,59 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
         { time: '7:00 PM', value: 0, secondary: 0 },
     ];
 
+    const timeframes = [
+        { id: 'today', label: 'Today' },
+        { id: 'week', label: 'Week' },
+        { id: 'month', label: 'Month' },
+        { id: 'all', label: 'All' }
+    ];
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     return (
         <motion.div
-            whileHover={{ y: -5 }}
-            className="bg-white p-7 rounded-[40px] border border-slate-100 shadow-xl flex flex-col h-[400px] relative overflow-hidden"
+            className="bg-white dark:bg-slate-900 p-7 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl flex flex-col h-87.5 relative overflow-hidden glass-card"
         >
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="font-bold text-slate-800 text-lg tracking-tight">Smart Focus Insights</h3>
                 </div>
-                <div className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 rounded-full cursor-pointer hover:bg-slate-100 transition-colors">
-                    <span className="text-[11px] font-bold text-slate-500">Analyze Hours</span>
-                    <ChevronRight size={14} className="rotate-90 text-slate-400" />
+                <div className="relative">
+                    <div
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 rounded-full cursor-pointer hover:bg-slate-100 transition-colors"
+                    >
+                        <span className="text-[11px] font-bold text-slate-500 capitalize">{currentTimeframe || 'Analyze Hours'}</span>
+                        <ChevronRight size={14} className={`${isMenuOpen ? '-rotate-90' : 'rotate-90'} text-slate-400 transition-transform`} />
+                    </div>
+
+                    <AnimatePresence>
+                        {isMenuOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                className="absolute right-0 mt-2 w-32 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden"
+                            >
+                                {timeframes.map(tf => (
+                                    <div
+                                        key={tf.id}
+                                        onClick={() => {
+                                            onTimeframeChange(tf.id);
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className={`px-4 py-2.5 text-[11px] font-bold transition-colors cursor-pointer ${currentTimeframe === tf.id ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}
+                                    >
+                                        {tf.label}
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
-            <div className="flex-1 mt-4 relative min-h-[250px]">
+            <div className="flex-1 mt-2 relative min-h-45">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
@@ -144,8 +216,8 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
                         <AreaChart data={displayData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
+                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <XAxis
@@ -173,8 +245,8 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
                                                 <div className="bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-xl mb-1 ring-2 ring-white">
                                                     {mins} mins
                                                 </div>
-                                                <div className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-md ring-2 ring-emerald-100" />
-                                                <div className="h-20 w-0.5 bg-emerald-500/30 -mt-0.5" />
+                                                <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-md ring-2 ring-blue-100" />
+                                                <div className="h-20 w-0.5 bg-blue-500/30 -mt-0.5" />
                                             </div>
                                         );
                                     }
@@ -185,7 +257,7 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
                             <Area
                                 type="monotone"
                                 dataKey="value"
-                                stroke="#10b981"
+                                stroke="#3b82f6"
                                 strokeWidth={2}
                                 fillOpacity={1}
                                 fill="url(#focusGradient)"
@@ -204,7 +276,7 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
 
             <div className="mt-4 flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Focus Time</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -218,9 +290,15 @@ const SmartFocusInsightsCard = ({ data, loading }) => {
 
 const WeeklyProgressCard = ({ data, loading }) => {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+    const [showComparison, setShowComparison] = useState(false);
 
     // Ensure we always have 7 days
     const allDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    // Mock data for last week comparison
+    const lastWeekMock = {
+        'Mon': 2.5, 'Tue': 3.0, 'Wed': 1.5, 'Thu': 4.0, 'Fri': 2.0, 'Sat': 1.0, 'Sun': 0.5
+    };
 
     const chartData = useMemo(() => {
         const dataMap = {};
@@ -232,28 +310,33 @@ const WeeklyProgressCard = ({ data, loading }) => {
 
         return allDays.map(day => ({
             day,
-            hours: dataMap[day] || 0,
+            thisWeek: dataMap[day] || 0,
+            lastWeek: lastWeekMock[day] || 0,
             isToday: day === today
         }));
     }, [data, today]);
 
-    // Use max value from data to scale bars
     const dynamicMaxHours = useMemo(() => {
-        const maxVal = Math.max(...chartData.map(d => d.hours), 0);
-        return maxVal > 1 ? maxVal : 1; // At least 1h scale
-    }, [chartData]);
+        const thisWeekMax = Math.max(...chartData.map(d => d.thisWeek), 0);
+        const lastWeekMax = showComparison ? Math.max(...chartData.map(d => d.lastWeek), 0) : 0;
+        const maxVal = Math.max(thisWeekMax, lastWeekMax);
+        return maxVal > 1 ? maxVal : 1;
+    }, [chartData, showComparison]);
 
     const CustomBar = (props) => {
-        const { x, y, width, height, payload } = props;
+        const { x, y, width, height, payload, dataKey } = props;
         if (!payload) return null;
 
-        const radius = width / 2;
         const isToday = payload.isToday;
-        const value = payload.hours || 0;
+        const value = payload[dataKey] || 0;
+        const radius = width / 2;
 
-        // Calculate height based on scale
-        const barHeight = Math.max((value / dynamicMaxHours) * height, width); // Minimum height is width for a circle
+        const barHeight = Math.max((value / dynamicMaxHours) * height, width);
         const barY = y + height - barHeight;
+
+        const fillColor = dataKey === 'thisWeek'
+            ? (isToday ? '#3b82f6' : 'url(#stripesThisWeek)')
+            : 'url(#stripesLastWeek)';
 
         return (
             <g>
@@ -263,10 +346,10 @@ const WeeklyProgressCard = ({ data, loading }) => {
                     width={width}
                     height={barHeight}
                     rx={radius}
-                    fill={isToday ? '#3b82f6' : 'url(#stripes)'}
-                    className="transition-all duration-300"
+                    fill={fillColor}
+                    className="transition-all duration-500 ease-out"
                 />
-                {isToday && (
+                {isToday && dataKey === 'thisWeek' && (
                     <circle cx={x + width / 2} cy={barY} r={3} fill="#1e3a8a" />
                 )}
             </g>
@@ -275,30 +358,32 @@ const WeeklyProgressCard = ({ data, loading }) => {
 
     return (
         <motion.div
-            whileHover={{ y: -5 }}
-            className="bg-white p-7 rounded-[40px] border border-slate-100 shadow-xl flex flex-col h-[400px] relative overflow-hidden"
+            className="bg-white dark:bg-slate-900 p-7 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl flex flex-col h-100 relative overflow-hidden glass-card"
         >
             <div className="flex items-start justify-between mb-4">
                 <div>
                     <h3 className="font-bold text-slate-800 text-lg tracking-tight">Weekly progress</h3>
-                    <p className="text-[10px] font-bold text-blue-600 mt-1 uppercase tracking-wider">Productivity</p>
+                    <p className="text-[10px] font-bold text-blue-600 mt-1 uppercase tracking-wider">Productivity Insights</p>
                 </div>
                 <motion.div
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     className="p-2.5 bg-slate-50 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer shadow-sm hover:shadow-md"
                 >
-                    <BarChart3 size={18} />
+                    <TrendingUp size={18} />
                 </motion.div>
             </div>
 
-            {/* Content & Progress */}
-            <div className="flex-1 mt-2 min-h-[250px]">
+            <div className="flex-1 mt-2 min-h-55">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 30, right: 10, left: 10, bottom: 0 }}>
                         <defs>
-                            <pattern id="stripes" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                            <pattern id="stripesThisWeek" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
                                 <rect width="4" height="8" fill="#eff6ff" />
                                 <rect x="4" width="4" height="8" fill="#dbeafe" />
+                            </pattern>
+                            <pattern id="stripesLastWeek" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                                <rect width="4" height="8" fill="#f8fafc" />
+                                <rect x="4" width="4" height="8" fill="#f1f5f9" />
                             </pattern>
                         </defs>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -311,17 +396,22 @@ const WeeklyProgressCard = ({ data, loading }) => {
                         />
                         <YAxis hide />
                         <RechartsTooltip
-                            cursor={false}
+                            cursor={{ fill: '#f8fafc' }}
                             offset={-40}
                             content={({ active, payload }) => {
                                 if (active && payload && payload.length) {
-                                    const val = payload[0].value;
                                     return (
-                                        <div className="flex flex-col items-center -translate-y-4">
-                                            <div className="bg-[#1e1e1e] text-white px-3 py-1.5 rounded-full text-[12px] font-bold shadow-2xl min-w-[40px] text-center border border-white/10">
-                                                {val * 60}
+                                        <div className="bg-[#1e1e1e] text-white px-4 py-3 rounded-2xl text-[11px] shadow-2xl border border-white/10 flex flex-col gap-2">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="font-bold text-slate-400">This Week</span>
+                                                <span className="font-black text-blue-400">{(payload[0].value * 60).toFixed(0)}m</span>
                                             </div>
-                                            <div className="w-1.5 h-1.5 bg-[#1e1e1e] rounded-full mt-1 border border-white/20 shadow-lg" />
+                                            {showComparison && (
+                                                <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/5">
+                                                    <span className="font-bold text-slate-400">Last Week</span>
+                                                    <span className="font-black text-slate-300">{(payload[1].value * 60).toFixed(0)}m</span>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 }
@@ -329,23 +419,42 @@ const WeeklyProgressCard = ({ data, loading }) => {
                             }}
                         />
                         <Bar
-                            dataKey="hours"
-                            barSize={32}
-                            shape={<CustomBar />}
+                            dataKey="thisWeek"
+                            barSize={showComparison ? 16 : 32}
+                            shape={<CustomBar dataKey="thisWeek" />}
                         />
+                        {showComparison && (
+                            <Bar
+                                dataKey="lastWeek"
+                                barSize={16}
+                                shape={<CustomBar dataKey="lastWeek" />}
+                            />
+                        )}
                     </BarChart>
                 </ResponsiveContainer>
             </div>
 
             <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-blue-600" />
-                    <span className="text-[10px] font-bold text-slate-400">This Week</span>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-blue-600" />
+                        <span className="text-[10px] font-bold text-slate-500">This Week</span>
+                    </div>
+                    {showComparison && (
+                        <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 transition-all">
+                            <div className="w-2 h-2 rounded-full bg-slate-300" />
+                            <span className="text-[10px] font-bold text-slate-400">Last Week</span>
+                        </div>
+                    )}
                 </div>
                 <button
-                    className="text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-all flex items-center gap-1.5"
+                    onClick={() => setShowComparison(!showComparison)}
+                    className={`text-[11px] font-black transition-all flex items-center gap-2 px-3 py-1.5 rounded-full ${showComparison ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 bg-slate-50'}`}
                 >
-                    Add a comparison <Plus size={12} />
+                    {showComparison ? 'Remove comparison' : 'Add a comparison'}
+                    <motion.div animate={{ rotate: showComparison ? 45 : 0 }}>
+                        <Plus size={12} strokeWidth={3} />
+                    </motion.div>
                 </button>
             </div>
         </motion.div >
@@ -384,8 +493,7 @@ const MonthProgressCard = ({ data, loading, productivityScore }) => {
 
     return (
         <motion.div
-            whileHover={{ y: -5 }}
-            className="bg-white p-7 rounded-[40px] border border-slate-100 shadow-xl relative overflow-hidden group h-[400px] flex flex-col"
+            className="bg-white dark:bg-slate-900 p-7 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group h-100 flex flex-col glass-card"
         >
             <div className="flex items-start justify-between">
                 <div>
@@ -401,7 +509,7 @@ const MonthProgressCard = ({ data, loading, productivityScore }) => {
 
             <div className="flex-1 flex flex-col md:flex-row items-center gap-6 mt-4 overflow-hidden">
                 {/* Legend Left */}
-                <div className="flex flex-col gap-2.5 min-w-[120px]">
+                <div className="flex flex-col gap-2.5 min-w-30">
                     {['Tasks', 'Class', 'Exams', 'Focus'].map((cat, i) => {
                         const colors = ['#2563eb', '#9333ea', '#db2777', '#d97706'];
                         const item = data?.find(d => d.label?.toLowerCase() === cat.toLowerCase());
@@ -422,16 +530,16 @@ const MonthProgressCard = ({ data, loading, productivityScore }) => {
                 </div>
 
                 {/* Concentric Rings Right */}
-                <div className="relative flex-1 min-h-[280px] h-full flex items-center justify-center">
+                <div className="relative flex-1 min-h-60 h-full flex items-center justify-center">
                     {chartData.some(d => d.displayValue > 0) ? (
                         <>
                             <ResponsiveContainer width="100%" height="100%">
                                 <RadialBarChart
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius="45%"
-                                    outerRadius="100%"
-                                    barSize={9}
+                                    innerRadius="35%"
+                                    outerRadius="80%"
+                                    barSize={8}
                                     data={chartData}
                                     startAngle={90}
                                     endAngle={450}
@@ -469,11 +577,11 @@ const MonthProgressCard = ({ data, loading, productivityScore }) => {
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mb-1">
                                 <span className="text-3xl font-black text-slate-900 tracking-tighter leading-none">{total}%</span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] text-center mt-2 opacity-60">Complete</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mt-2 opacity-60">Complete</span>
                             </div>
                         </>
                     ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-2">
                             <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-2">
                                 <Target size={24} strokeWidth={1.5} />
                             </div>
@@ -507,20 +615,19 @@ const MonthProgressCard = ({ data, loading, productivityScore }) => {
     );
 };
 
-const MonthGoalsCard = ({ goals, loading, onToggle, onAdd }) => {
+const MonthGoalsCard = ({ goals, loading, onToggle, onAdd, onDelete, onEdit }) => {
     const completedCount = goals?.filter(g => g.completed).length || 0;
     const totalCount = goals?.length || 0;
     const completionPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
     return (
         <motion.div
-            whileHover={{ y: -5 }}
-            className="bg-white p-7 rounded-[40px] border border-slate-100 shadow-xl relative overflow-hidden group h-[400px] flex flex-col"
+            className="bg-white dark:bg-slate-900 p-7 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group h-87.5 flex flex-col glass-card"
         >
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <div className="relative w-12 h-12 flex items-center justify-center">
-                        <svg className="w-full h-full rotate-[-90deg]">
+                        <svg className="w-full h-full -rotate-90">
                             <circle cx="24" cy="24" r="20" stroke="#f1f5f9" strokeWidth="4" fill="transparent" />
                             <motion.circle
                                 cx="24" cy="24" r="20" stroke="#f59e0b" strokeWidth="4" fill="transparent"
@@ -545,7 +652,7 @@ const MonthGoalsCard = ({ goals, loading, onToggle, onAdd }) => {
                 </div>
             </div>
 
-            <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar flex-1">
+            <div className="space-y-3 max-h-45 overflow-y-auto pr-1 custom-scrollbar flex-1">
                 <AnimatePresence mode="popLayout">
                     {goals && goals.length > 0 ? goals.map((goal, i) => (
                         <motion.div
@@ -554,15 +661,29 @@ const MonthGoalsCard = ({ goals, loading, onToggle, onAdd }) => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             key={goal._id || i}
-                            className={`flex items-center gap-4 group/item cursor-pointer p-2 rounded-2xl transition-all hover:bg-slate-50 border border-transparent hover:border-slate-100`}
+                            className={`flex items-center gap-4 group/item cursor-pointer p-2 rounded-2xl transition-all hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700`}
                             onClick={() => onToggle(goal._id, goal.completed)}
                         >
-                            <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all shadow-sm ${goal.completed ? 'bg-blue-600 border-blue-600' : 'border-slate-200 group-hover/item:border-blue-600 bg-white'}`}>
-                                {goal.completed ? <Check size={14} className="text-white" /> : <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover/item:bg-blue-400 transition-colors" />}
+                            <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all shadow-sm ${goal.completed ? 'bg-blue-600 border-blue-600' : 'border-slate-200 dark:border-slate-700 group-hover/item:border-blue-600 bg-white dark:bg-slate-900 shadow-sm'}`}>
+                                {goal.completed ? <Check size={14} className="text-white" /> : <div className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 group-hover/item:bg-blue-400 transition-colors" />}
                             </div>
                             <span className={`text-[13px] font-bold transition-all flex-1 ${goal.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                                 {goal.title}
                             </span>
+                            <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onEdit(goal); }}
+                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                >
+                                    <Edit size={14} />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onDelete(goal._id); }}
+                                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                >
+                                    <Plus size={14} className="rotate-45" />
+                                </button>
+                            </div>
                         </motion.div>
                     )) : (
                         <div className="flex flex-col items-center justify-center py-4 text-center opacity-40">
@@ -574,103 +695,197 @@ const MonthGoalsCard = ({ goals, loading, onToggle, onAdd }) => {
             </div>
 
             <div className="mt-4 flex items-center justify-end">
-                <button onClick={() => toast.success('Goal editing coming soon')} className="p-1 text-slate-300 hover:text-slate-500 transition-colors">
-                    <Edit size={14} />
-                </button>
+                <p className="text-[10px] font-bold text-slate-400 italic">Hover items to edit/delete</p>
             </div>
         </motion.div>
     );
 };
 
-const CalendarPreview = ({ events }) => (
-    <div className="h-[600px] w-full professional-preview bg-white rounded-[40px] p-8 border border-slate-100 shadow-2xl relative overflow-hidden">
-        {/* Background Accent */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none" />
+const CalendarPreview = ({ events }) => {
+    const CustomToolbar = (toolbar) => {
+        const goToBack = () => {
+            toolbar.onNavigate('PREV');
+        };
+        const goToNext = () => {
+            toolbar.onNavigate('NEXT');
+        };
+        const goToCurrent = () => {
+            toolbar.onNavigate('TODAY');
+        };
 
-        <div className="flex items-center justify-between mb-8 relative z-10">
-            <div>
-                <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
-                    <CalendarIcon size={32} className="text-blue-500" />
-                    Calendar
-                </h2>
-                <p className="text-sm text-slate-400 font-bold mt-1">Plan and schedule your activities</p>
+        const label = () => {
+            const date = toolbar.date;
+            return (
+                <span className="text-xl font-black text-slate-800 tracking-tight">
+                    {format(date, 'MMMM')} <span className="text-blue-600">{format(date, 'yyyy')}</span>
+                </span>
+            );
+        };
+
+        return (
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 mt-2">
+                <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+                    <button
+                        onClick={goToCurrent}
+                        className="px-6 py-2.5 text-[11px] font-black text-slate-600 hover:text-blue-600 hover:bg-white rounded-xl transition-all uppercase tracking-widest active:scale-95"
+                    >
+                        Today
+                    </button>
+                    <div className="w-px h-4 bg-slate-200" />
+                    <button
+                        onClick={goToBack}
+                        className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all active:scale-95"
+                    >
+                        <ChevronRight className="rotate-180" size={18} strokeWidth={3} />
+                    </button>
+                    <button
+                        onClick={goToNext}
+                        className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all active:scale-95"
+                    >
+                        <ChevronRight size={18} strokeWidth={3} />
+                    </button>
+                </div>
+
+                <div className="bg-white px-8 py-3 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-500">
+                    {label()}
+                </div>
+
+                <Link to="/calendar" className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-blue-500/25 hover:scale-105 active:scale-95 group">
+                    Full Schedule
+                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
             </div>
-            <Link to="/calendar" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[20px] font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-blue-500/25 hover:scale-105 active:scale-95">
-                Full Schedule <ChevronRight size={16} />
-            </Link>
-        </div>
+        );
+    };
 
-        <div className="h-[calc(100%-100px)] relative z-10">
-            <Calendar
-                localizer={localizer}
-                events={events}
-                startAccessor="start"
-                endAccessor="end"
-                style={{ height: '100%' }}
-                views={['month']}
-                defaultView="month"
-                toolbar={true}
-                components={{
-                    event: ({ event }) => (
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            className={`p-2.5 rounded-2xl text-[10px] font-black truncate shadow-lg border-l-4 transition-all ${event.type === 'exam' ? 'bg-rose-500/10 text-rose-600 border-rose-500' :
-                                event.type === 'vacation' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500' :
-                                    event.type === 'class' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500' :
-                                        'bg-blue-600/10 text-blue-600 border-blue-600'
-                                }`}
-                        >
-                            <div className="flex items-center gap-1.5 mb-1 opacity-70">
-                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                10:00 AM
-                            </div>
-                            {event.title}
-                        </motion.div>
-                    )
-                }}
-                className="text-xs font-bold"
-            />
-        </div>
-        <style>{`
+    return (
+        <div className="h-160 w-full professional-preview bg-white dark:bg-slate-900 rounded-[40px] p-8 md:p-10 border border-slate-100 dark:border-slate-800 shadow-2xl relative overflow-hidden glass-card">
+            {/* Background Accent */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none" />
+
+            <div className="flex items-center justify-between mb-2 relative z-10">
+                <div>
+                    <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+                        <div className="p-2.5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-500/20">
+                            <CalendarIcon size={28} />
+                        </div>
+                        Calendar
+                    </h2>
+                    <p className="text-sm text-slate-400 font-bold mt-2 ml-1">Plan and schedule your activities</p>
+                </div>
+            </div>
+
+            <div className="h-[calc(100%-120px)] relative z-10">
+                <Calendar
+                    localizer={localizer}
+                    events={events}
+                    startAccessor="start"
+                    endAccessor="end"
+                    style={{ height: '100%' }}
+                    views={['month']}
+                    defaultView="month"
+                    toolbar={true}
+                    components={{
+                        toolbar: CustomToolbar,
+                        event: ({ event }) => (
+                            <motion.div
+                                whileHover={{ scale: 1.05, y: -2, zIndex: 50 }}
+                                className={`p-2.5 rounded-xl text-[10px] font-black truncate shadow-md border-l-4 transition-all h-full flex flex-col justify-center relative group ${event.completed ? 'opacity-40 grayscale-[0.5] border-slate-300 bg-slate-100' :
+                                    event.type === 'exam' ? 'bg-rose-500/10 text-rose-600 border-rose-500 shadow-rose-500/5' :
+                                        event.type === 'vacation' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500 shadow-emerald-500/5' :
+                                            event.type === 'class' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500 shadow-indigo-500/5' :
+                                                'bg-blue-600/10 text-blue-600 border-blue-600 shadow-blue-500/5'
+                                    }`}
+                            >
+                                <div className="flex items-center justify-between mb-1 opacity-80">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <div className={`shrink-0 w-1.5 h-1.5 rounded-full ${event.completed ? 'bg-slate-400' :
+                                            event.priority === 'high' ? 'bg-rose-500' :
+                                                event.priority === 'low' ? 'bg-emerald-500' : 'bg-blue-500'
+                                            }`} />
+                                        <span className="truncate">{format(event.start, 'p')}</span>
+                                    </div>
+                                    {event.completed ? (
+                                        <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                                    ) : (
+                                        event.priority === 'high' && <span className="text-[8px] text-rose-600 font-black animate-pulse shrink-0">!</span>
+                                    )}
+                                </div>
+                                <div className={`truncate text-[11px] leading-tight ${event.completed ? 'line-through text-slate-500' : ''}`}>
+                                    {event.title}
+                                </div>
+
+                                {/* Hover Indicator */}
+                                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors pointer-events-none rounded-xl" />
+                            </motion.div>
+                        )
+                    }}
+                    className="text-xs font-bold"
+                />
+            </div>
+            <style>{`
             .professional-preview .rbc-header { 
                 font-weight: 900; 
                 text-transform: uppercase; 
-                font-size: 11px; 
-                color: #94a3b8; 
-                padding: 20px 0; 
-                border-bottom: 1px solid #f1f5f9; 
-            }
-            .professional-preview .rbc-off-range-bg { background: #fbfcfe; }
-            .professional-preview .rbc-today { background: #f0f7ff; }
-            .professional-preview .rbc-month-view { border: none !important; }
-            .professional-preview .rbc-day-bg { border-left: 1px solid #f1f5f9; border-top: 1px solid #f1f5f9; }
-            .professional-preview .rbc-month-row { border-top: none; }
-            .professional-preview .rbc-date-cell { padding: 15px; font-weight: 800; color: #64748b; font-size: 13px; }
-            .professional-preview .rbc-event { background: none !important; padding: 4px !important; }
-            .professional-preview .rbc-toolbar { margin-bottom: 25px; }
-            .professional-preview .rbc-toolbar button { 
-                border: 1px solid #f1f5f9; 
-                font-weight: 900; 
-                color: #64748b; 
-                text-transform: uppercase; 
                 font-size: 10px; 
-                padding: 10px 20px; 
-                border-radius: 12px;
-                margin: 0 4px;
+                color: #64748b; 
+                padding: 16px 0; 
+                border-bottom: 2px solid #f1f5f9; 
+                border-left: 1px solid #f1f5f9;
+                letter-spacing: 0.1em;
+                background: #f8fafc;
             }
-            .professional-preview .rbc-toolbar button:hover { background: #f8fafc; }
-            .professional-preview .rbc-toolbar button.rbc-active { background: #2563EB; color: white; border-color: #2563EB; }
+            .professional-preview .rbc-header:first-child { border-left: none; }
+            .professional-preview .rbc-off-range-bg { background: #fafbfc; opacity: 0.5; }
+            .professional-preview .rbc-today { background: #f0f7ff; position: relative; }
+            .professional-preview .rbc-today .rbc-header { background: #e0f2fe; color: #2563eb; }
+            .professional-preview .rbc-today::after {
+                content: '';
+                position: absolute;
+                top: 0; right: 0;
+                width: 0; height: 0;
+                border-style: solid;
+                border-width: 0 16px 16px 0;
+                border-color: transparent #3b82f6 transparent transparent;
+                z-index: 10;
+            }
+            .professional-preview .rbc-month-view { border: none !important; background: transparent; border-radius: 20px; overflow: hidden; }
+            .professional-preview .rbc-day-bg { 
+                border-left: 1px solid #f1f5f9; 
+                border-top: 1px solid #f1f5f9; 
+                transition: all 0.2s ease;
+            }
+            .professional-preview .rbc-day-bg:hover { background: #f1f5f9; cursor: pointer; }
+            .professional-preview .rbc-month-row { border-top: none; }
+            .professional-preview .rbc-date-cell { padding: 12px; font-weight: 900; color: #94a3b8; font-size: 13px; text-align: right; }
+            .professional-preview .rbc-today .rbc-date-cell { color: #2563eb; }
+            .professional-preview .rbc-event { background: none !important; padding: 2px 6px !important; margin-bottom: 2px; }
+            .professional-preview .rbc-show-more {
+                font-weight: 900;
+                color: #3b82f6;
+                font-size: 10px;
+                text-transform: uppercase;
+                margin-left: 8px;
+                background: #eff6ff;
+                padding: 2px 8px;
+                border-radius: 6px;
+                transition: all 0.2s ease;
+            }
+            .professional-preview .rbc-show-more:hover { background: #dbeafe; scale: 1.05; }
+                border-radius: 6px;
+            }
         `}</style>
-    </div>
-);
+        </div>
+    );
+};
 
-const RefinedStatCard = ({ icon, label, value, subValue, percentage, color, trend, loading, hideGauge, isPrimary, comparison, description }) => {
+const RefinedStatCard = ({ icon, label, value, subValue, percentage, color, trend, loading, hideGauge, isPrimary, comparison, description, onClick }) => {
     if (loading) {
         return (
-            <div className={`bg-white p-6 rounded-[32px] border border-slate-100 animate-pulse ${isPrimary ? 'h-40' : 'h-32'}`}>
-                <div className="h-8 w-8 bg-slate-50 rounded-2xl mb-3" />
-                <div className="h-3 w-20 bg-slate-50 rounded mb-2" />
-                <div className="h-6 w-14 bg-slate-50 rounded" />
+            <div className={`bg-white dark:bg-slate-900 p-6 rounded-4xl border border-slate-100 dark:border-slate-800 animate-pulse ${isPrimary ? 'h-40' : 'h-32'}`}>
+                <div className="h-8 w-8 bg-slate-50 dark:bg-slate-800 rounded-2xl mb-3" />
+                <div className="h-3 w-20 bg-slate-50 dark:bg-slate-800 rounded mb-2" />
+                <div className="h-6 w-14 bg-slate-50 dark:bg-slate-800 rounded" />
             </div>
         );
     }
@@ -678,7 +893,8 @@ const RefinedStatCard = ({ icon, label, value, subValue, percentage, color, tren
     return (
         <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className={`bg-white py-4 px-6 rounded-[32px] border border-slate-100 shadow-[0_15px_30px_rgba(0,0,0,0.03)] transition-all relative overflow-hidden group h-full flex flex-col justify-between`}
+            onClick={onClick}
+            className={`bg-white dark:bg-slate-900 py-4 px-6 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-[0_15px_30px_rgba(0,0,0,0.03)] transition-all relative overflow-hidden group h-full flex flex-col justify-between glass-card ${onClick ? 'cursor-pointer' : ''}`}
         >
             {/* 3 Circles Decoration */}
             <div className="absolute -top-6 -right-6 flex gap-2 rotate-12 opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none">
@@ -690,10 +906,10 @@ const RefinedStatCard = ({ icon, label, value, subValue, percentage, color, tren
             <div>
                 <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl shadow-sm ${color.replace('text-', 'bg-').replace('-500', '-500/10').replace('-600', '-600/10')}`}>
+                        <div className={`p-2 rounded-xl shadow-sm ${color.replace('text-', 'bg-').replace('-500', '-500/10').replace('-600', '-600/10')} dark:bg-white/5 group-hover:scale-110 transition-transform`}>
                             {typeof icon === 'string' ? <span className="text-xl">{icon}</span> : cloneElement(icon, { size: 18 })}
                         </div>
-                        <h3 className="font-bold text-[13px] text-slate-800 tracking-tight">{label}</h3>
+                        <h3 className="font-bold text-[13px] text-slate-800 dark:text-slate-100 tracking-tight">{label}</h3>
                     </div>
                 </div>
 
@@ -716,7 +932,7 @@ const RefinedStatCard = ({ icon, label, value, subValue, percentage, color, tren
 
             <div className="flex items-end justify-between mt-1">
                 {description && (
-                    <p className="text-[10px] md:text-[11px] font-bold text-slate-400 leading-relaxed max-w-[140px]">
+                    <p className="text-[10px] md:text-[11px] font-bold text-slate-400 leading-relaxed max-w-35 group-hover:text-slate-600 transition-colors">
                         {description}
                     </p>
                 )}
@@ -735,6 +951,65 @@ const RefinedStatCard = ({ icon, label, value, subValue, percentage, color, tren
     );
 };
 
+const TaskViewerModal = ({ isOpen, onClose, title, tasks, onToggle, onDelete }) => {
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="bg-white dark:bg-slate-900 rounded-[40px] w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800"
+                    >
+                        <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{title}</h2>
+                                <p className="text-sm text-slate-400 font-bold mt-1">Manage your {title.toLowerCase()}</p>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-2xl transition-all active:scale-95"
+                            >
+                                <Plus size={24} className="rotate-45" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
+                            {tasks.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {tasks.map((task) => (
+                                        <TaskItem
+                                            key={task._id}
+                                            task={task}
+                                            onToggle={onToggle}
+                                            onDelete={onDelete}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-20 opacity-40">
+                                    <AlertCircle size={48} className="mx-auto mb-4 text-slate-300" />
+                                    <p className="text-lg font-bold text-slate-400">No {title.toLowerCase()} found</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-8 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 backdrop-blur-md">
+                            <button
+                                onClick={onClose}
+                                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-blue-500/25 active:scale-95"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 const Dashboard = () => {
     const { user, token } = useSelector((state) => state.auth);
     const { timeLeft, isActive, mode } = useSelector((state) => state.pomodoro);
@@ -747,8 +1022,16 @@ const Dashboard = () => {
     const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
     const [newGoalTitle, setNewGoalTitle] = useState('');
     const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
+    const [editingGoal, setEditingGoal] = useState(null);
+    const [hourlyTimeframe, setHourlyTimeframe] = useState('all');
+    const [isDeletingGoal, setIsDeletingGoal] = useState(false);
+    const [goalToDelete, setGoalToDelete] = useState(null);
 
-    // Timer logic is now handled by GlobalTimer component
+    // Task Interactivity State
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [taskFilter, setTaskFilter] = useState('pending'); // 'pending', 'done', 'overdue'
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const [isDeletingTask, setIsDeletingTask] = useState(false);
 
     const MODES = {
         focus: { label: 'Focus', color: 'text-blue-600', bg: '#2563EB' },
@@ -762,31 +1045,48 @@ const Dashboard = () => {
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const data = await dashboardService.getStats();
-                if (data.success) {
-                    setStats(data.data);
-                    setCalendarEvents(mapTasksToEvents(data.data?.user?.taskStats?.upcomingTasks));
-                }
-                setLoading(false);
-            } catch (err) {
-                setLoading(false);
-            }
-        };
+    const fetchStats = async (timeframe = hourlyTimeframe) => {
+        try {
+            // ⭐ Pass local boundaries to fix "Today" drift
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            const endOfToday = new Date();
+            endOfToday.setHours(23, 59, 59, 999);
 
+            const options = {
+                startOfToday: startOfToday.toISOString(),
+                endOfToday: endOfToday.toISOString()
+            };
+
+            const data = await dashboardService.getStats(timeframe, options);
+            if (data.success) {
+                setStats(data.data);
+                setCalendarEvents(mapTasksToEvents(data.data?.user?.taskStats?.upcomingTasks));
+            }
+            setLoading(false);
+        } catch (err) {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         if (token) {
             fetchStats();
+
+            // Auto-refresh every 30 seconds for real-time accuracy
+            const interval = setInterval(() => {
+                fetchStats(hourlyTimeframe);
+            }, 30000);
+
+            return () => clearInterval(interval);
         }
-    }, [dispatch, token]);
+    }, [dispatch, token, hourlyTimeframe]);
 
     const handleToggleGoal = async (goalId, completed) => {
         try {
             await goalService.updateGoal(goalId, { completed: !completed });
             // Refresh stats
-            const data = await dashboardService.getStats();
-            setStats(data.data);
+            fetchStats();
         } catch (err) {
             toast.error('Failed to update goal');
         }
@@ -801,18 +1101,112 @@ const Dashboard = () => {
         if (!newGoalTitle.trim()) return;
         setIsSubmittingGoal(true);
         try {
-            await goalService.createGoal({ title: newGoalTitle, type: 'monthly' });
-            toast.success('Goal added!');
+            if (editingGoal) {
+                await goalService.updateGoal(editingGoal._id, { title: newGoalTitle });
+                toast.success('Goal updated!');
+            } else {
+                await goalService.createGoal({ title: newGoalTitle, type: 'monthly' });
+                toast.success('Goal added!');
+            }
             setNewGoalTitle('');
+            setEditingGoal(null);
             setIsGoalModalOpen(false);
             // Refresh stats
-            const data = await dashboardService.getStats();
-            setStats(data.data);
+            fetchStats();
         } catch (err) {
-            toast.error('Failed to add goal');
+            toast.error(editingGoal ? 'Failed to update goal' : 'Failed to add goal');
         } finally {
             setIsSubmittingGoal(false);
         }
+    };
+
+    const handleDeleteGoalRequest = (goalId) => {
+        setGoalToDelete(goalId);
+        setIsDeletingGoal(true);
+    };
+
+    const handleConfirmDeleteGoal = async () => {
+        if (!goalToDelete) return;
+        try {
+            await goalService.deleteGoal(goalToDelete);
+            toast.success('Goal deleted');
+            fetchStats();
+        } catch (err) {
+            toast.error('Failed to delete goal');
+        } finally {
+            setIsDeletingGoal(false);
+            setGoalToDelete(null);
+        }
+    };
+
+    const handleEditGoal = (goal) => {
+        setEditingGoal(goal);
+        setNewGoalTitle(goal.title);
+        setIsGoalModalOpen(true);
+    };
+
+    // Task Interactivity Handlers
+    const handleToggleTask = async (task) => {
+        try {
+            const updatedTask = { ...task, completed: !task.completed };
+            await taskService.updateTask(task._id, updatedTask);
+            toast.success(updatedTask.completed ? 'Goal smashed! 🚀' : 'Task restored');
+            fetchStats();
+        } catch (err) {
+            toast.error('Failed to update task');
+        }
+    };
+
+    const handleDeleteTaskRequest = (taskId) => {
+        setTaskToDelete(taskId);
+        setIsDeletingTask(true);
+    };
+
+    const handleConfirmDeleteTask = async () => {
+        if (!taskToDelete) return;
+        try {
+            await taskService.deleteTask(taskToDelete);
+            toast.success('Task removed');
+            fetchStats();
+        } catch (err) {
+            toast.error('Failed to delete task');
+        } finally {
+            setIsDeletingTask(false);
+            setTaskToDelete(null);
+        }
+    };
+
+    const openTaskFilter = (filter) => {
+        setTaskFilter(filter);
+        setIsTaskModalOpen(true);
+    };
+
+    const getFilteredTasks = () => {
+        if (!stats?.user?.taskStats) return [];
+        if (taskFilter === 'done') return stats.user.taskStats.completedTasks || [];
+
+        // Match the backend: include everything from today onwards (Local) as pending
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        if (taskFilter === 'pending') {
+            return stats.user.taskStats.upcomingTasks?.filter(t =>
+                !t.completed && new Date(t.dueDate) >= startOfToday
+            ) || [];
+        }
+        if (taskFilter === 'overdue') {
+            return stats.user.taskStats.upcomingTasks?.filter(t =>
+                !t.completed && new Date(t.dueDate) < startOfToday
+            ) || [];
+        }
+        return [];
+    };
+
+    const getFilterTitle = () => {
+        if (taskFilter === 'done') return 'Completed Tasks';
+        if (taskFilter === 'pending') return 'Pending Tasks';
+        if (taskFilter === 'overdue') return 'Overdue Tasks';
+        return 'Tasks';
     };
 
     const containerVariants = {
@@ -869,14 +1263,14 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
                 {/* Welcome & Gamification */}
                 <div className="lg:col-span-8">
-                    <div className="bg-blue-600 rounded-[32px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-white relative overflow-hidden h-full shadow-2xl shadow-blue-500/20">
+                    <div className="bg-blue-600 rounded-4xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-white relative overflow-hidden h-full shadow-2xl shadow-blue-500/20">
                         {/* Background Decor */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
                         <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/5 rounded-full blur-2xl -ml-12 -mb-12 pointer-events-none" />
 
                         <div className="space-y-4 relative z-10 w-full md:w-auto text-center md:text-left">
                             <h2 className="text-lg font-medium opacity-90">
-                                <span className="font-bold">{stats?.user?.taskStats?.pending || 0}</span> tasks due today.
+                                <span className="font-bold">{stats?.user?.taskStats?.dueToday || 0}</span> tasks due today.
                             </h2>
                             <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
                                 {getGreeting()},<br />
@@ -886,8 +1280,8 @@ const Dashboard = () => {
 
                         {/* Active Timer Card */}
                         <div className="bg-white rounded-[28px] p-2 shadow-lg max-w-sm w-full md:w-auto">
-                            <div className="bg-slate-50 rounded-[24px] px-6 py-5 flex items-center gap-6 w-full">
-                                <div className="relative w-40 h-40 flex-shrink-0">
+                            <div className="bg-slate-50 rounded-3xl px-6 py-5 flex items-center gap-6 w-full">
+                                <div className="relative w-40 h-40 shrink-0">
                                     <svg className="w-full h-full transform -rotate-90">
                                         <circle cx="80" cy="80" r="70" stroke="#e2e8f0" strokeWidth="8" fill="transparent" />
                                         <motion.circle
@@ -923,7 +1317,7 @@ const Dashboard = () => {
                                             e.preventDefault();
                                             dispatch(toggleTimer());
                                         }}
-                                        className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-md transition-all hover:scale-110 active:scale-95 ${MODES[mode]?.bg ? `bg-[${MODES[mode].bg}]` : 'bg-blue-600'}`}
+                                        className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-md transition-all hover:scale-110 active:scale-95 bg-blue-600"
                                         style={{ backgroundColor: MODES[mode]?.bg || '#2563EB' }}
                                         title={isActive ? "Pause Timer" : "Start Timer"}
                                     >
@@ -988,9 +1382,36 @@ const Dashboard = () => {
 
             {/* Metrics Row 2: Tasks Done, Pending, Overdue, Hours */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                <RefinedStatCard loading={loading} icon={<CheckCircle2 className="text-emerald-600" size={24} />} label="Tasks Done" value={`${completionRate}%`} percentage={completionRate} color="text-emerald-600" />
-                <RefinedStatCard loading={loading} icon={<Clock className="text-slate-500" size={24} />} label="Pending Task" value={stats?.user?.taskStats?.pending || 0} percentage={Math.min((stats?.user?.taskStats?.pending || 0) * 10, 100)} color="text-slate-500" />
-                <RefinedStatCard loading={loading} icon={<AlertCircle className="text-rose-600" size={24} />} label="Overdue Task" value={stats?.user?.taskStats?.overdue || 0} color="text-rose-600" percentage={Math.min((stats?.user?.taskStats?.overdue || 0) * 20, 100)} />
+                <RefinedStatCard
+                    loading={loading}
+                    icon={<CheckCircle2 className="text-emerald-600" size={24} />}
+                    label="Tasks Done"
+                    value={`${completionRate}%`}
+                    percentage={completionRate}
+                    color="text-emerald-600"
+                    onClick={() => openTaskFilter('done')}
+                    description="View completed"
+                />
+                <RefinedStatCard
+                    loading={loading}
+                    icon={<Clock className="text-slate-500" size={24} />}
+                    label="Pending Task"
+                    value={stats?.user?.taskStats?.pending || 0}
+                    percentage={Math.min((stats?.user?.taskStats?.pending || 0) * 10, 100)}
+                    color="text-slate-500"
+                    onClick={() => openTaskFilter('pending')}
+                    description="View pending"
+                />
+                <RefinedStatCard
+                    loading={loading}
+                    icon={<AlertCircle className="text-rose-600" size={24} />}
+                    label="Overdue Task"
+                    value={stats?.user?.taskStats?.overdue || 0}
+                    color="text-rose-600"
+                    percentage={Math.min((stats?.user?.taskStats?.overdue || 0) * 20, 100)}
+                    onClick={() => openTaskFilter('overdue')}
+                    description="View overdue"
+                />
                 <RefinedStatCard
                     loading={loading}
                     icon={<BookOpen className="text-blue-500" size={24} />}
@@ -1016,12 +1437,19 @@ const Dashboard = () => {
 
                 {/* Bottom Row: Month Goals (Full width or centered) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <SmartFocusInsightsCard data={stats?.analytics?.hourlyStats} loading={loading} />
+                    <SmartFocusInsightsCard
+                        data={stats?.analytics?.hourlyStats}
+                        loading={loading}
+                        onTimeframeChange={setHourlyTimeframe}
+                        currentTimeframe={hourlyTimeframe}
+                    />
                     <MonthGoalsCard
                         goals={stats?.analytics?.monthGoals}
                         loading={loading}
                         onToggle={handleToggleGoal}
                         onAdd={handleAddGoal}
+                        onDelete={handleDeleteGoalRequest}
+                        onEdit={handleEditGoal}
                     />
                 </div>
             </div>
@@ -1034,13 +1462,52 @@ const Dashboard = () => {
             {/* Custom Modals */}
             <ActionModal
                 isOpen={isGoalModalOpen}
-                onClose={() => setIsGoalModalOpen(false)}
+                onClose={() => {
+                    setIsGoalModalOpen(false);
+                    setEditingGoal(null);
+                    setNewGoalTitle('');
+                }}
                 onConfirm={handleConfirmGoal}
-                title="Add Month Goal"
-                placeholder="What do you want to achieve this month?"
+                title={editingGoal ? "Edit Month Goal" : "Add Month Goal"}
+                placeholder={editingGoal ? "Enter new goal title..." : "What do you want to achieve this month?"}
                 value={newGoalTitle}
                 setValue={setNewGoalTitle}
                 loading={isSubmittingGoal}
+            />
+
+            <ConfirmModal
+                isOpen={isDeletingGoal}
+                onClose={() => {
+                    setIsDeletingGoal(false);
+                    setGoalToDelete(null);
+                }}
+                onConfirm={handleConfirmDeleteGoal}
+                title="Delete Goal?"
+                message="Are you sure you want to delete this monthly goal? This action cannot be undone."
+                type="danger"
+                confirmText="Delete"
+            />
+
+            <TaskViewerModal
+                isOpen={isTaskModalOpen}
+                onClose={() => setIsTaskModalOpen(false)}
+                title={getFilterTitle()}
+                tasks={getFilteredTasks()}
+                onToggle={handleToggleTask}
+                onDelete={handleDeleteTaskRequest}
+            />
+
+            <ConfirmModal
+                isOpen={isDeletingTask}
+                onClose={() => {
+                    setIsDeletingTask(false);
+                    setTaskToDelete(null);
+                }}
+                onConfirm={handleConfirmDeleteTask}
+                title="Delete Task?"
+                message="Are you sure you want to delete this task? This action cannot be undone."
+                type="danger"
+                confirmText="Delete"
             />
         </motion.div>
     );

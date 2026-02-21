@@ -74,7 +74,7 @@ const Sidebar = () => {
                     }`}
             >
                 {/* Logo Area */}
-                <div className="h-28 flex items-center justify-center border-b border-slate-200 dark:border-slate-800 relative">
+                <div className="h-20 flex items-center justify-center border-b border-slate-200 dark:border-slate-800 relative">
                     <Link to="/" className={`flex items-center gap-3 overflow-hidden px-6 w-full ${collapsed ? 'justify-center' : ''}`}>
                         <div className="flex items-center gap-3">
                             <img
@@ -269,7 +269,7 @@ const Sidebar = () => {
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-md shadow-blue-500/20 group-hover:scale-110 transition-transform overflow-hidden">
                             {user?.profilePicture && user.profilePicture !== 'default-avatar.png' ? (
                                 <img
-                                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:5000${user.profilePicture}`}
+                                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:5003${user.profilePicture}`}
                                     alt={user.name}
                                     className="w-full h-full object-cover"
                                 />

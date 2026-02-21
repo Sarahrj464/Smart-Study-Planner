@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, addDays } from 'date-fns';
+import { format, parse, startOfWeek, getDay, addDays, differenceInMinutes } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalIcon, Trophy } from 'lucide-react';
@@ -97,20 +97,37 @@ const CalendarPage = () => {
             const response = await taskService.getTasks(token);
             if (response.success) {
                 const mappedEvents = response.data.map(task => {
-                    // Combine dueDate and time for better calendar positioning
+                    // ✅ Robust date parsing to avoid timezone shifts
                     let start = new Date(task.dueDate);
+                    // Use local date parts to avoid UTC shift if the date string is just YYYY-MM-DD
+                    if (typeof task.dueDate === 'string' && task.dueDate.length <= 10) {
+                        const [y, m, d] = task.dueDate.split('-').map(Number);
+                        start = new Date(y, m - 1, d);
+                    }
+
                     if (task.time) {
                         try {
-                            const [h, m] = task.time.split(':');
-                            const hours = parseInt(h);
-                            const minutes = parseInt(m.substring(0, 2));
-                            const isPM = task.time.toLowerCase().includes('pm');
+                            // Support "15:30", "03:30 PM", "3:30pm" etc.
+                            const timeStr = task.time.toLowerCase().trim();
+                            const isPM = timeStr.includes('pm');
+                            const isAM = timeStr.includes('am');
 
-                            start.setHours(isPM && hours < 12 ? hours + 12 : (!isPM && hours === 12 ? 0 : hours));
-                            start.setMinutes(minutes);
+                            // Remove am/pm and split
+                            const cleanTime = timeStr.replace(/[ap]m/g, '').trim();
+                            const [hStr, mStr] = cleanTime.split(':');
+                            let hours = parseInt(hStr);
+                            const minutes = mStr ? parseInt(mStr) : 0;
+
+                            if (isPM && hours < 12) hours += 12;
+                            if (isAM && hours === 12) hours = 0;
+
+                            start.setHours(hours, minutes, 0, 0);
                         } catch (e) {
-                            console.warn('Could not parse time for task:', task.title);
+                            console.warn('Could not parse time for task:', task.title, task.time);
+                            start.setHours(9, 0, 0, 0); // Default to 9 AM if parsing fails
                         }
+                    } else {
+                        start.setHours(9, 0, 0, 0); // Default to 9 AM if no time provided
                     }
 
                     const duration = task.duration || 60; // default 1hr
@@ -146,10 +163,29 @@ const CalendarPage = () => {
         setIsModalOpen(true);
     };
 
-    const handleSaveEvent = (newEvent) => {
-        // Refresh after save
-        fetchTasks();
-        setIsModalOpen(false);
+    const handleSaveEvent = async (newEvent) => {
+        try {
+            // Prepare data for backend
+            const taskData = {
+                title: newEvent.title,
+                type: newEvent.type === 'deadline' ? 'exam' : 'task',
+                subject: 'Other', // Required by backend
+                dueDate: format(newEvent.start, 'yyyy-MM-dd'),
+                time: format(newEvent.start, 'HH:mm'),
+                priority: newEvent.priority || 'medium',
+                duration: differenceInMinutes(newEvent.end, newEvent.start) || 60
+            };
+
+            const response = await taskService.createTask(taskData);
+            if (response.success) {
+                toast.success('Event saved successfully!');
+                fetchTasks(); // Refresh
+                setIsModalOpen(false);
+            }
+        } catch (err) {
+            console.error('Failed to save event:', err);
+            toast.error('Failed to save event');
+        }
     };
 
     const eventStyleGetter = (event) => {
@@ -180,31 +216,34 @@ const CalendarPage = () => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`h-full w-full rounded-2xl border bg-gradient-to-br ${config.split(' ').slice(0, 2).join(' ')} ${config.split(' ')[2]} p-3 flex flex-col justify-between relative group overflow-hidden shadow-lg backdrop-blur-md transition-all`}
+                whileHover={{ scale: 1.02, y: -2 }}
+                className={`h-full w-full rounded-2xl border bg-gradient-to-br transition-all duration-300 ${event.completed ? 'from-slate-100 to-slate-200 border-slate-300 opacity-60 grayscale-[0.5]' : config.split(' ').slice(0, 2).join(' ')} ${event.completed ? '' : config.split(' ')[2]} p-3 flex flex-col justify-between relative group overflow-hidden shadow-lg backdrop-blur-md`}
             >
-                <div>
+                <div className="z-10">
                     <div className="flex items-center justify-between mb-1">
-                        <span className={`text-[8px] uppercase tracking-widest ${config.split(' ')[3]}`}>
+                        <span className={`text-[8px] uppercase tracking-widest ${event.completed ? 'text-slate-500' : config.split(' ')[3]}`}>
                             {event.type}
                         </span>
-                        {event.completed && <Trophy size={10} className="text-emerald-400" />}
+                        {event.completed && <CheckCircle2 size={12} className="text-emerald-500" />}
                     </div>
-                    <h4 className="text-[11px] font-black text-white leading-tight truncate">
+                    <h4 className={`text-[11px] font-black leading-tight truncate ${event.completed ? 'text-slate-500 line-through' : 'text-white'}`}>
                         {event.title}
                     </h4>
                 </div>
 
-                <div className="flex items-center justify-between mt-2">
-                    <span className="text-[8px] font-bold text-slate-400 uppercase">
+                <div className="flex items-center justify-between mt-2 z-10">
+                    <span className={`text-[8px] font-bold uppercase ${event.completed ? 'text-slate-400' : 'text-slate-400'}`}>
                         {event.subject || 'Misc'}
                     </span>
-                    <span className="text-[8px] font-black text-white/50 group-hover:text-white transition-colors">
+                    <span className={`text-[8px] font-black transition-colors ${event.completed ? 'text-slate-400' : 'text-white/50 group-hover:text-white'}`}>
                         {format(event.start, 'p')}
                     </span>
                 </div>
 
                 {/* Glass Glow */}
-                <div className="absolute -right-2 -top-2 w-8 h-8 bg-white/5 rounded-full blur-md group-hover:bg-white/10 transition-colors" />
+                {!event.completed && (
+                    <div className="absolute -right-2 -top-2 w-12 h-12 bg-white/5 rounded-full blur-md group-hover:bg-white/10 transition-all duration-500" />
+                )}
             </motion.div>
         );
     };
@@ -248,11 +287,16 @@ const CalendarPage = () => {
                     font-weight: 900; 
                     text-transform: uppercase; 
                     font-size: 11px; 
-                    color: #94a3b8; 
-                    border-bottom: 1px solid #f1f5f9; 
+                    color: #64748b; 
+                    border-bottom: 2px solid #f1f5f9; 
                     border-left: 1px solid #f1f5f9;
+                    background: #f8fafc;
+                    transition: all 0.2s ease;
                 }
+                .precisely-styled-calendar .rbc-header:hover { background: #f1f5f9; color: #0095ff; }
                 .precisely-styled-calendar .rbc-header:first-child { border-left: none; }
+                
+                .precisely-styled-calendar .rbc-header.rbc-today { background: #e0f2fe; color: #0095ff; }
                 
                 /* Day Indicator Styling */
                 .precisely-styled-calendar .rbc-header.rbc-today span {

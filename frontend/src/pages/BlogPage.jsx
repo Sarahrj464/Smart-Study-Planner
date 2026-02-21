@@ -108,7 +108,7 @@ const BlogPage = () => {
 };
 
 const BlogCard = ({ blog }) => (
-    <article className="group bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:border-blue-200 dark:hover:border-blue-900/30 transition-all duration-500 flex flex-col h-full">
+    <article className="group bg-white dark:bg-slate-900 rounded-4xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:border-blue-200 dark:hover:border-blue-900/30 transition-all duration-500 flex flex-col h-full">
         {blog.image && (
             <div className="h-56 overflow-hidden">
                 <img

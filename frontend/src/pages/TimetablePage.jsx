@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { timetableService } from '../redux/api/timetableService';
 import { setTimetable } from '../redux/slices/timetableSlice';
 import { Plus, Trash2, Save, X, Calendar as CalIcon, Clock } from 'lucide-react';
+import ConfirmModal from '../components/common/ConfirmModal';
 import toast from 'react-hot-toast';
 import AddEventModal from '../components/common/AddEventModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +18,7 @@ const TimetablePage = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState({ day: '', time: '' });
+    const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
     useEffect(() => {
         const fetchTimetable = async () => {
@@ -45,7 +47,8 @@ const TimetablePage = () => {
             day: selectedSlot.day,
             timeSlot: `${eventData.start.getHours()}:00 - ${eventData.end.getHours()}:00`,
             subject: eventData.title,
-            type: eventData.type
+            type: eventData.type,
+            priority: eventData.priority
         };
         setLocalSchedule([...localSchedule, newItem]);
         toast.success(`${eventData.title} added to ${selectedSlot.day}`);
@@ -69,7 +72,6 @@ const TimetablePage = () => {
     };
 
     const clearAll = async () => {
-        if (!window.confirm('Clear typical week schedule?')) return;
         try {
             await timetableService.clearTimetable();
             setLocalSchedule([]);
@@ -77,6 +79,8 @@ const TimetablePage = () => {
             toast.success('Timetable cleared');
         } catch (err) {
             toast.error('Failed to clear');
+        } finally {
+            setIsConfirmClearOpen(false);
         }
     };
 
@@ -93,7 +97,7 @@ const TimetablePage = () => {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={clearAll}
+                        onClick={() => setIsConfirmClearOpen(true)}
                         className="px-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-red-500 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-sm hover:shadow-md active:scale-95"
                     >
                         Clear Week
@@ -147,12 +151,19 @@ const TimetablePage = () => {
                                                     className={`h-full w-full rounded-2xl border-l-[6px] p-4 flex flex-col justify-between shadow-lg relative group/event cursor-pointer hover:scale-[1.02] transition-all ${event.type === 'study' ? 'bg-purple-50 border-purple-500' : 'bg-blue-50 border-blue-500'
                                                         }`}
                                                 >
-                                                    <div>
-                                                        <span className={`text-[9px] font-black uppercase tracking-widest ${event.type === 'study' ? 'text-purple-600' : 'text-blue-600'
-                                                            }`}>
-                                                            {event.type || 'Class'}
-                                                        </span>
-                                                        <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1 line-clamp-2">{event.subject}</h4>
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <span className={`text-[9px] font-black uppercase tracking-widest ${event.type === 'study' ? 'text-purple-600' : 'text-blue-600'
+                                                                }`}>
+                                                                {event.type || 'Class'}
+                                                            </span>
+                                                            <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1 line-clamp-2">{event.subject}</h4>
+                                                        </div>
+                                                        {event.priority && (
+                                                            <div className={`w-2 h-2 rounded-full mt-1 ${event.priority === 'high' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
+                                                                event.priority === 'low' ? 'bg-emerald-500' : 'bg-blue-500'
+                                                                }`} />
+                                                        )}
                                                     </div>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); removeEvent(event); }}
@@ -186,6 +197,16 @@ const TimetablePage = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveEvent}
                 initialDate={new Date()} // Simplified for recurring timetable
+            />
+
+            <ConfirmModal
+                isOpen={isConfirmClearOpen}
+                onClose={() => setIsConfirmClearOpen(false)}
+                onConfirm={clearAll}
+                title="Clear Schedule?"
+                message="Are you sure you want to clear your entire weekly schedule? This cannot be undone."
+                type="danger"
+                confirmText="Clear Week"
             />
         </div>
     );

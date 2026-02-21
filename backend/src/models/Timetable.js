@@ -20,6 +20,15 @@ const timetableSchema = new mongoose.Schema({
             subject: {
                 type: String,
                 required: true
+            },
+            type: {
+                type: String,
+                default: 'class'
+            },
+            priority: {
+                type: String,
+                enum: ['high', 'medium', 'low'],
+                default: 'medium'
             }
         }
     ]

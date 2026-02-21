@@ -7,6 +7,7 @@ const AddEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
     const [type, setType] = useState('study');
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
+    const [priority, setPriority] = useState('medium');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -21,7 +22,7 @@ const AddEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
         const [eH, eM] = endTime.split(':');
         end.setHours(parseInt(eH), parseInt(eM));
 
-        onSave({ title, type, start, end });
+        onSave({ title, type, start, end, priority });
         setTitle('');
         onClose();
     };
@@ -119,6 +120,32 @@ const AddEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
                                     onChange={(e) => setEndTime(e.target.value)}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold"
                                 />
+                            </div>
+                        </div>
+
+                        {/* Priority Selection */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                Priority
+                            </label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { val: 'low', color: 'emerald' },
+                                    { val: 'medium', color: 'blue' },
+                                    { val: 'high', color: 'rose' }
+                                ].map((p) => (
+                                    <button
+                                        key={p.val}
+                                        type="button"
+                                        onClick={() => setPriority(p.val)}
+                                        className={`py-2 px-3 rounded-xl text-xs font-bold capitalize transition-all border ${priority === p.val
+                                            ? `bg-${p.color}-600 text-white border-${p.color}-600 shadow-lg`
+                                            : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-transparent hover:border-slate-300'
+                                            }`}
+                                    >
+                                        {p.val}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 

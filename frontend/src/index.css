@@ -35,9 +35,9 @@
 }
 
 .dark {
-  /* Dark Mode Base */
-  --bg: #0A0C12;
-  --card-bg: rgba(17, 24, 39, 0.7);
+  /* Dark Mode Base - Deeper, more premium slate */
+  --bg: #030712;
+  --card-bg: #111827;
   --text: #F8FAFC;
   --text-muted: #94A3B8;
   --border: #1F2937;
@@ -57,6 +57,44 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px) scale(1.015);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+}
+
+.dark .glass-card:hover {
+  box-shadow: 0 15px 40px -10px rgba(59, 130, 246, 0.25), 0 8px 12px -6px rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+}
+
+/* Base button animations */
+button,
+.btn {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+button:hover:not(:disabled),
+.btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 59, 130, 246), 0.3);
+}
+
+button:active:not(:disabled),
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Utility to disable global button hover effects when not needed */
+.no-hover-effect,
+.no-hover-effect:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 .neon-glow-primary {
@@ -141,4 +179,179 @@ h4,
 /* Smooth transitions */
 .transition-all {
   transition: all 0.3s ease;
+}
+
+/* Premium Calendar Styling */
+.rbc-calendar {
+  font-family: var(--font-sans);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.rbc-month-view {
+  border: none !important;
+}
+
+.rbc-day-bg {
+  border-left: 1px solid var(--border) !important;
+  transition: background-color 0.2s ease;
+}
+
+.rbc-day-bg:hover {
+  background-color: rgba(var(--primary-rgb, 59, 130, 246), 0.1) !important;
+  cursor: pointer;
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.rbc-row-content {
+  z-index: 2;
+}
+
+/* Event color schemes - "Cool and Fresh" */
+.rbc-event {
+  background-color: var(--primary) !important;
+  border: none !important;
+  opacity: 0.9;
+  transition: all 0.2s ease !important;
+}
+
+.rbc-event:hover {
+  transform: scale(1.05) translateY(-2px);
+  filter: brightness(1.2);
+  opacity: 1;
+  z-index: 10;
+}
+
+/* Specific Event Types in Calendar Preview */
+.rbc-event[style*="rose"] {
+  background-color: #f43f5e !important;
+}
+
+.rbc-event[style*="emerald"] {
+  background-color: #10b981 !important;
+}
+
+.rbc-event[style*="indigo"] {
+  background-color: #6366f1 !important;
+}
+
+.rbc-event[style*="blue"] {
+  background-color: #3b82f6 !important;
+}
+
+
+.rbc-off-range-bg {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark .rbc-off-range-bg {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.rbc-header {
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 0 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--text-muted) !important;
+}
+
+.rbc-today {
+  background-color: rgba(var(--primary-rgb, 59, 130, 246), 0.1) !important;
+}
+
+.rbc-event {
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .rbc-event {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+}
+
+.rbc-date-cell {
+  padding: 8px !important;
+  font-weight: 700 !important;
+  color: var(--text);
+}
+
+.rbc-date-cell.rbc-now {
+  color: var(--primary) !important;
+}
+
+/* Ensure visibility of vibrant colors on dark cards */
+.dark .text-slate-800,
+.dark .text-slate-900,
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #F8FAFC !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: #94A3B8 !important;
+}
+
+.dark .bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-50 {
+  border-color: var(--border) !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-slate-200 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Fix text visibility on elements that MUST remain white/light in dark mode */
+.dark .keep-light,
+.dark .keep-light *,
+.dark .keep-light-bg,
+.dark .keep-light-bg * {
+  color: #0F172A !important;
+}
+
+.dark .keep-light-bg {
+  background-color: #FFFFFF !important;
+}
+
+/* Specific button text visibility on dark backgrounds */
+.dark button.bg-blue-600,
+.dark .btn-primary,
+.dark button[class*="bg-blue-"],
+.dark button[class*="bg-indigo-"],
+.dark button[class*="bg-purple-"],
+.dark button[class*="bg-emerald-"],
+.dark button[class*="bg-slate-900"],
+.dark button[class*="bg-black"] {
+  color: #FFFFFF !important;
+}
+
+/* Ensure link visibility in dark mode */
+.dark a:not([class*="text-"]) {
+  color: var(--primary);
+}
+
+.dark a:hover:not([class*="text-"]) {
+  color: var(--primary-dark);
 }

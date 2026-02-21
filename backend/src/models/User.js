@@ -2,87 +2,57 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Please add a name'],
-        trim: true,
-        maxlength: [50, 'Name cannot be more than 50 characters']
-    },
-    email: {
-        type: String,
-        required: [true, 'Please add an email'],
-        unique: true,
-        trim: true,
-        lowercase: true,
-        match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-            'Please add a valid email'
-        ]
-    },
-    password: {
-        type: String,
-        required: [true, 'Please add a password'],
-        minlength: 6,
-        select: false
-    },
-    role: {
-        type: String,
-        enum: ['student', 'admin'],
-        default: 'student'
-    },
-    profilePicture: {
-        type: String,
-        default: 'default-avatar.png'
-    },
-    xp: {
-        type: Number,
-        default: 0
-    },
-    level: {
-        type: Number,
-        default: 1
-    },
-    badges: [
-        {
-            type: String
-        }
-    ],
-    studyStats: {
-        totalHours: {
-            type: Number,
-            default: 0
-        },
-        focusPercent: {
-            type: Number,
-            default: 0
-        },
-        streak: {
-            type: Number,
-            default: 0
-        }
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-}, {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
-});
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false
+  },
+  role: {
+    type: String,
+    enum: ['student', 'admin'],
+    default: 'student'
+  },
+  xp: { type: Number, default: 0 },
+  level: { type: Number, default: 1 },
+  badges: [{ type: String }],
+  studyStats: { type: Object, default: {} },
+  profilePicture: { type: String, default: '' },
 
-// Encrypt password using bcrypt
+  // ✅ WhatsApp Notification Fields
+  phoneNumber: {
+    type: String,
+    default: ''
+  },
+  notificationPrefs: {
+    reminders: { type: Boolean, default: true },
+    dailySummary: { type: Boolean, default: true },
+    overdueAlerts: { type: Boolean, default: true }
+  }
+
+}, { timestamps: true });
+
+// ✅ Password hashing
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-// Match user entered password to hashed password in database
+// ✅ matchPassword method
 userSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema);

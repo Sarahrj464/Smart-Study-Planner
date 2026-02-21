@@ -146,36 +146,29 @@ const Hero = ({ onOpenAuth }) => {
                         animate="visible"
                         className="relative lg:block hidden -mt-20"
                     >
-                        <div className="relative group">
-                            {/* Decorative background glow behind the image */}
-                            <div className="absolute -inset-4 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 blur-2xl rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                            {/* Main image with pure opacity blending */}
-                            <motion.div
-                                animate="floating"
-                                variants={imageVariants}
-                            >
-                                <motion.img
-                                    key={darkMode ? 'dark' : 'light'}
-                                    src={darkMode ? blackHeroImage : heroImage}
-                                    alt="StudyPulse App - Students using timer and task management"
-                                    className="relative w-full h-auto opacity-95"
-                                    style={{
-                                        filter: 'brightness(1.02) saturate(1.05)',
-                                        willChange: 'transform, opacity'
-                                    }}
-                                    whileHover={{ scale: 1.02, opacity: 1 }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </motion.div>
-                            {/* Hidden preloader for the other theme image */}
-                            <img
-                                src={darkMode ? heroImage : blackHeroImage}
-                                alt=""
-                                className="hidden"
-                                aria-hidden="true"
+                        {/* Main image with pure opacity blending */}
+                        <motion.div
+                            animate="floating"
+                            variants={imageVariants}
+                        >
+                            <motion.img
+                                key={darkMode ? 'dark' : 'light'}
+                                src={darkMode ? blackHeroImage : heroImage}
+                                alt="StudyPulse App - Students using timer and task management"
+                                className="relative w-full h-auto"
+                                style={{
+                                    filter: 'brightness(1.02) saturate(1.05)',
+                                    willChange: 'transform, opacity'
+                                }}
                             />
-                        </div>
+                        </motion.div>
+                        {/* Hidden preloader for the other theme image */}
+                        <img
+                            src={darkMode ? heroImage : blackHeroImage}
+                            alt=""
+                            className="hidden"
+                            aria-hidden="true"
+                        />
                     </motion.div>
                 </div>
             </div>

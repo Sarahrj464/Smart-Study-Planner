@@ -20,7 +20,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, placeholder, value, se
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-[32px] p-8 shadow-2xl z-[1000] border border-slate-100"
+                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-4xl p-8 shadow-2xl z-[1000] border border-slate-100"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-black text-slate-800 tracking-tight">{title}</h3>

@@ -1,9 +1,6 @@
-// frontend/src/redux/slices/taskSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../api/apiClient';
 
-
-// Async Thunks
 export const fetchTasks = createAsyncThunk(
   'tasks/fetchAll',
   async (_, { rejectWithValue }) => {
@@ -23,7 +20,7 @@ export const createTask = createAsyncThunk(
       const response = await apiClient.post('/tasks', taskData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data);
     }
   }
 );
@@ -32,10 +29,10 @@ export const updateTask = createAsyncThunk(
   'tasks/update',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.patch(`/tasks/${id}`, data);
+      const response = await apiClient.put(`/tasks/${id}`, data);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data);
     }
   }
 );
@@ -47,7 +44,7 @@ export const deleteTask = createAsyncThunk(
       await apiClient.delete(`/tasks/${id}`);
       return id;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data);
     }
   }
 );
@@ -57,13 +54,13 @@ export const toggleComplete = createAsyncThunk(
   async (id, { getState, rejectWithValue }) => {
     try {
       const task = getState().tasks.items.find(t => t._id === id);
-      const response = await apiClient.patch(`/tasks/${id}`, {
+      const response = await apiClient.put(`/tasks/${id}`, {
         completed: !task.completed,
         completedAt: !task.completed ? new Date() : null
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data);
     }
   }
 );
@@ -74,8 +71,8 @@ const taskSlice = createSlice({
     items: [],
     loading: false,
     error: null,
-    filter: 'all', // all, active, completed
-    sortBy: 'dueDate' // dueDate, priority, createdAt
+    filter: 'all',
+    sortBy: 'dueDate'
   },
   reducers: {
     setFilter: (state, action) => {
@@ -87,56 +84,51 @@ const taskSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Tasks
       .addCase(fetchTasks.pending, (state) => {
         state.loading = true;
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload.data || action.payload;
       })
       .addCase(fetchTasks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
-      // Create Task
       .addCase(createTask.fulfilled, (state, action) => {
-        state.items.push(action.payload);
+        const task = action.payload.data || action.payload;
+        state.items.push(task);
+      })
+      .addCase(createTask.rejected, (state, action) => {
+        state.error = action.payload;
       })
 
-      // Update Task
       .addCase(updateTask.fulfilled, (state, action) => {
-        const index = state.items.findIndex(t => t._id === action.payload._id);
-        if (index !== -1) {
-          state.items[index] = action.payload;
-        }
+        const updated = action.payload.data || action.payload;
+        const index = state.items.findIndex(t => t._id === updated._id);
+        if (index !== -1) state.items[index] = updated;
       })
 
-      // Delete Task
       .addCase(deleteTask.fulfilled, (state, action) => {
         state.items = state.items.filter(t => t._id !== action.payload);
       })
 
-      // Toggle Complete
       .addCase(toggleComplete.fulfilled, (state, action) => {
-        const index = state.items.findIndex(t => t._id === action.payload._id);
-        if (index !== -1) {
-          state.items[index] = action.payload;
-        }
+        const updated = action.payload.data || action.payload;
+        const index = state.items.findIndex(t => t._id === updated._id);
+        if (index !== -1) state.items[index] = updated;
       });
   }
 });
 
 export const { setFilter, setSortBy } = taskSlice.actions;
 
-// Selectors
 export const selectAllTasks = (state) => state.tasks.items;
 
 export const selectFilteredTasks = (state) => {
   const { items, filter, sortBy } = state.tasks;
 
-  // Filter
   let filtered = items;
   if (filter === 'active') {
     filtered = items.filter(t => !t.completed);
@@ -144,11 +136,10 @@ export const selectFilteredTasks = (state) => {
     filtered = items.filter(t => t.completed);
   }
 
-  // Sort
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'priority') {
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
+      const priorityOrder = { high: 0, High: 0, medium: 1, Medium: 1, low: 2, Low: 2 };
+      return (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
     } else if (sortBy === 'dueDate') {
       return new Date(a.dueDate) - new Date(b.dueDate);
     } else {

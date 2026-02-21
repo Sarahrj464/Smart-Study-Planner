@@ -10,31 +10,63 @@ const GlobalTimer = () => {
     const { timeLeft, isActive, mode } = useSelector((state) => state.pomodoro);
     const { user } = useSelector((state) => state.auth);
 
+    const MOTIVATIONAL_MESSAGES = [
+        "Legendary work! You crushed that session! 🏆",
+        "Focus levels: ELITE. Time for a well-deserved break! ⚡",
+        "Boom! Another session focused. You're unstoppable! 🔥",
+        "Success is the sum of small efforts. Great job! ✨",
+        "One step closer to your goals. Excellent focus! 🎯",
+        "Your brain worked hard. Let it recharge now! 🔋"
+    ];
+
     const handleComplete = useCallback(async () => {
         dispatch(setTimerActive(false));
 
         if (mode === 'focus') {
             try {
+                // Determine duration based on current state (default 25)
+                const sessionDuration = 25;
                 const res = await pomodoroService.createSession({
-                    duration: 25,
+                    duration: sessionDuration,
                     completed: true
                 });
 
                 dispatch(addSession(res.data));
                 dispatch(incrementCompletedSessions());
-                toast.success('Session complete! +10 XP earned 🏆', {
-                    duration: 5000,
-                    position: 'bottom-right'
+
+                const randomMessage = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
+
+                toast.success(randomMessage, {
+                    duration: 6000,
+                    icon: '🚀',
+                    position: 'bottom-right',
+                    style: {
+                        background: '#1e293b',
+                        color: '#fff',
+                        borderRadius: '16px',
+                        padding: '16px',
+                        fontWeight: 'bold'
+                    }
                 });
+
+                // Auto-transition to Short Break
+                setTimeout(() => {
+                    dispatch(setMode({ mode: 'short', time: 5 * 60 }));
+                    toast('Ready for a 5-minute break?', {
+                        icon: '☕',
+                        duration: 8000,
+                        position: 'bottom-right'
+                    });
+                }, 1500);
 
                 // Refresh user metrics globally
                 if (user) {
                     const updatedUser = {
                         ...user,
-                        xp: user.xp + 10,
+                        xp: (user.xp || 0) + 10,
                         studyStats: {
                             ...user.studyStats,
-                            totalHours: (user.studyStats?.totalHours || 0) + (25 / 60)
+                            totalHours: (user.studyStats?.totalHours || 0) + (sessionDuration / 60)
                         }
                     };
                     dispatch(updateUser(updatedUser));
@@ -43,10 +75,12 @@ const GlobalTimer = () => {
                 console.error('Failed to save session:', err);
             }
         } else {
-            toast.success('Break finished! Ready to focus?', {
+            toast.success('Break finished! Ready to focus? 🧠', {
                 duration: 5000,
                 position: 'bottom-right'
             });
+            // Auto-transition back to Focus mode but don't start it
+            dispatch(setMode({ mode: 'focus', time: 25 * 60 }));
         }
 
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
